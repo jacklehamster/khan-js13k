@@ -7,7 +7,7 @@ cs.border = "1px solid black";
 cs.backgroundColor = "#efd";
 cs.transition = "background-color 0.5s";
 
-const zoom = 0.6;
+const zoom = .8;
 const keys = {};
 document.addEventListener("keyup", (e) => {
   delete keys[e.code];
@@ -54,10 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
 const srcWidth = 1600;
 const srcHeight = 1000;
 let random = 5;
-function showFrame(x, y, w, h, frame, anim, color, ddy, random) {
+function showFrame(ctx, x, y, w, h, frame, anim, color, ddy, random, debug) {
   const mulW = w/srcWidth;
   const mulH = h/srcHeight;
-  ctx.fillStyle = color ?? black;
+  ctx.fillStyle = color ?? "black";
   root.shapes.forEach(shape => {
     if (shape.hidden || (shape.anim !== anim)) {
       return;
@@ -65,17 +65,17 @@ function showFrame(x, y, w, h, frame, anim, color, ddy, random) {
     const ll = shape.lines[frame % shape.lines.length];
     if (ll) {
       ctx.beginPath();
-      moveTo(x, y, ll[0] * mulW, ll[1] * mulH, false, w, h, ddy, random);
+      moveTo(ctx, x, y, ll[0] * mulW, ll[1] * mulH, false, w, h, ddy, random);
       for (let i = 2; i < ll.length; i+=2) {
-        moveTo(x, y, ll[i] * mulW, ll[i+1] * mulH, true, w, h, ddy, random);
+        moveTo(ctx, x, y, ll[i] * mulW, ll[i+1] * mulH, true, w, h, ddy, random);
       }
       ctx.closePath();
-      ctx.fill();
     }
+    ctx.fill();
   });
 }
 
-function moveTo(offsetX, offsetY, x, y, penDown, w, h, ddy, random) {
+function moveTo(ctx, offsetX, offsetY, x, y, penDown, w, h, ddy, random) {
   if (penDown) {
       ctx.lineTo(offsetX + x, offsetY + y + (x/w - .5)*5 * ddy + random * (Math.random() - .5));
   } else {
@@ -171,6 +171,7 @@ const sprite = {
   layer: 0,
   hidden: false,
   tree: false,
+  cache: false,
   sprites: [
     sprite => evaluate({
       ...sprite,
@@ -223,7 +224,7 @@ const sprite = {
       animation: sprite => sprite.tree ? "tree" : "horse",
       range: (sprite) => sprite.tree ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
       hotspot: (sprite) => sprite.tree ? [.53, 1] : [.47, .72],
-      color: "#888",
+      color: "#999",
       direction: (sprite) => Math.sign(sprite.orientation),
       height: -50,
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
@@ -251,6 +252,15 @@ function showSprite(sprite, time, dt, accumulator) {
   sprite.time = time;
   const sprites = evaluate(sprite.sprites, sprite);
   sprites.forEach(sprite => {
+    const { x, y, width, height, hotspot } = sprite;
+    const left = x - hotspot[0] * width - sh[0];
+    const top = y - hotspot[1] * height - sh[1];
+    const right = left + width;
+    const bottom = top + height;
+    if (right < 0 || bottom < 0 || left > canvas.width || top > canvas.height) {
+      return;
+    }
+
     accumulator.push(sprite);
     // const { x, y, width, height, animation, born, horseFrame, range, hotspot, color, direction, dy, random } = sprite;
 
@@ -268,17 +278,38 @@ function showSprite(sprite, time, dt, accumulator) {
   });
 }
 
-function display(s, time) {
-    const { x, y, width, height, animation, born, horseFrame, range, hotspot, color, direction, dy, random, hidden } = s;
+const cacheBox = {};
+
+function display(s) {
+    const { x, y, width, height, animation, horseFrame, range, hotspot, color, direction, dy, random, hidden, cache } = s;
     if (hidden) {
       return;
     }
-
     const frame = range[0] + (range.length <= 1 ? 0 : Math.floor(horseFrame) % (range[1] - range[0]));
-    const anim = root.animations.indexOf(animation);
     const dir = evaluate(direction, sprite);
     const ddy = evaluate(dy, sprite);
-    showFrame(
+    if (cache) {
+      const anim = root.animations.indexOf(animation);
+      const tag = `${animation}-${frame}-${color}-${dir}-${width}-${height}`;
+      if (!cacheBox[tag]) {
+        //console.log(tag);
+        cacheBox[tag] = {
+          canvas: document.createElement("canvas"),
+        };
+        cacheBox[tag].canvas.width = width;
+        cacheBox[tag].canvas.height = height;
+        cacheBox[tag].canvas.getContext("2d").lineWidth = 6;
+        cacheBox[tag].canvas.getContext("2d").strokeStyle = "black";
+//        document.body.appendChild(cacheBox[tag].canvas);
+
+        showFrame(cacheBox[tag].canvas.getContext("2d"), dir < 0 ? width : 0, height < 0 ? -height : 0, width * dir, height, frame, anim, color, 0, 0);
+      }
+      ctx.drawImage(cacheBox[tag].canvas, x - hotspot[0] * width - sh[0], y - (height < 0 ? 0 : hotspot[1] * height) - sh[1] +shake);
+      return;
+    }
+  
+    const anim = root.animations.indexOf(animation);
+    showFrame(ctx,
       x - hotspot[0] * width * dir - sh[0],
       y - hotspot[1] * height - sh[1] + shake,
       width * dir, height, frame, anim, color, ddy, random);
@@ -321,6 +352,7 @@ const foes = new Array(100).fill(0).map(() => {
 
   const foe = {
     ...copy(sprite),
+    horseFrame: Math.floor(Math.random() * 100),
     goal: [0, 0],
     gdist: 0,
     ax: (sprite) => (sprite.goal[0] - foe.x) / 2000,
@@ -330,6 +362,7 @@ const foes = new Array(100).fill(0).map(() => {
     rangeOverride: [0, 3],
     speed: Math.max(.05, Math.random() / 15),//sprite => 10 / (evaluate(sprite.gdist, sprite) + 1),
     archerOrientation: (sprite) => Math.sign(evaluate(sprite.dx, sprite)),
+    cache: true,
     process: (sprite) => {
       if (!sprite.parent) {
         return;
@@ -378,14 +411,17 @@ const foes = new Array(100).fill(0).map(() => {
 });
 
 
-const trees = new Array(100).fill(0).map(() => {
-  const angle = Math.random() * Math.PI * 2;
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
+const trees = new Array(50).fill(0).map(() => {
+  // const angle = Math.random() * Math.PI * 2;
+  // const cos = Math.cos(angle);
+  // const sin = Math.sin(angle);
   const tree = {
     ...copy(sprite),
-    x: cos * (2000 + Math.random()*1000),
-    y: sin * (2000 + Math.random()*1000),
+    cache: true,
+    x: Math.random() * 5000 - 2500,
+    y: Math.random() * 5000 - 2500,
+    // x: cos * (2000 + Math.random()*1000),
+    // y: sin * (2000 + Math.random()*1000),
     process: (sprite) => {
       if (!sprite.parent) {
         return;
@@ -393,7 +429,7 @@ const trees = new Array(100).fill(0).map(() => {
       const hx = sprite.x - hero.x;
       const hy = sprite.y - hero.y;
       const hdist = Math.sqrt(hx * hx + hy * hy);
-      if (hdist < 50) {
+      if (hdist < 40) {
         console.log("TREE", hdist);
         shakeSize = 30;
         hero.x -= hx;
@@ -411,7 +447,16 @@ const trees = new Array(100).fill(0).map(() => {
         // sprite.x = hero.x + cos * 2000;
         // sprite.y = hero.y + sin * 2000;
       }
-
+      if (hx > 3000) {
+        sprite.x -= 5000;
+      } else if (hx < -3000) {
+        sprite.x += 5000;
+      }
+      if (hy > 3000) {
+        sprite.y -= 5000;
+      } else if (hy < -3000) {
+        sprite.y += 5000;
+      }
     },
     foe: true,
     width: 500 * zoom,

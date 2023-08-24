@@ -97,24 +97,6 @@ function refreshTabs() {
     refreshTabs();
     onUpdatedShape();
   });
-  const removeTab = tabs.appendChild(document.createElement("div"));
-  removeTab.textContent = "x";  
-  removeTab.style.backgroundColor = "pink";
-  removeTab.style.color = "red";
-  removeTab.style.cursor = "pointer";
-  removeTab.style.margin = "2px";
-  removeTab.style.borderRadius = "20px";
-  removeTab.style.padding = "2px 20px";
-  removeTab.addEventListener("click", () => {
-    if (!confirm(`Do you want to remove the "${root.animations[root.animations.length-1]}" tab?`)) {
-      return;
-    }
-    root.animations.pop();
-    root.anim = root.animations.length-1;
-    onAnimChange();
-    refreshTabs();
-    onUpdatedShape();
-  });
 
 }
 
@@ -585,92 +567,92 @@ function loop(now) {
 
 
 
-  const imgW = 104, imgH = 68;
-  const sx = (slide % 4) * imgW;
-  const sy = Math.floor(slide / 4) * imgH;
-  ctx.drawImage(img, sx, sy, imgW, imgH, 0, 0, 1600, 900);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-  ctx.fillRect(0, 0, c.width, c.height);
+//   const imgW = 104, imgH = 68;
+//   const sx = (slide % 4) * imgW;
+//   const sy = Math.floor(slide / 4) * imgH;
+//   ctx.drawImage(img, sx, sy, imgW, imgH, 0, 0, 1600, 900);
+//   ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+//   ctx.fillRect(0, 0, c.width, c.height);
 
 
-  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+//   ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
 
 
-  ctx.strokeStyle = "black";
-  ctx.beginPath();
-  ctx.moveTo(lines[0], lines[1]);
-  for (let i = 2; i < lines.length; i+=2) {
-    ctx.lineTo(lines[i], lines[i+1]);
-  }
-//  ctx.closePath();
-  ctx.stroke();
-  ctx.fill();
+//   ctx.strokeStyle = "black";
+//   ctx.beginPath();
+//   ctx.moveTo(lines[0], lines[1]);
+//   for (let i = 2; i < lines.length; i+=2) {
+//     ctx.lineTo(lines[i], lines[i+1]);
+//   }
+// //  ctx.closePath();
+//   ctx.stroke();
+//   ctx.fill();
 
 
-  // ctx.lineStyle = "red";
-  // ctx.beginPath();
-  // ctx.arc(mouseX, mouseY, 15, 0, 2 * Math.PI);
-  // ctx.stroke();
+//   // ctx.lineStyle = "red";
+//   // ctx.beginPath();
+//   // ctx.arc(mouseX, mouseY, 15, 0, 2 * Math.PI);
+//   // ctx.stroke();
 
-  // if (anchor && !attachedPoint) {
-  //   ctx.setLineDash([5, 15]);
-  //   const rx = Math.min(anchor[0], mouseX);
-  //   const ry = Math.min(anchor[1], mouseY);
-  //   const rw = Math.abs(anchor[0] - mouseX);
-  //   const rh = Math.abs(anchor[1] - mouseY);
-  //   ctx.rect(rx, ry, rw, rh);
-  //   ctx.stroke();
-  //   ctx.setLineDash([]);
-  // }
-
-
-  if (colorIndex >= 0) {
-    ctx.strokeStyle = "blue";
-    ctx.beginPath();
-    ctx.moveTo(lines[colorIndex], lines[colorIndex + 1]);
-    ctx.lineTo(lines[colorIndex + 2], lines[colorIndex + 3])
-    ctx.lineTo(lines[colorIndex + 4], lines[colorIndex + 5])
-    ctx.stroke();
-  }
-  ctx.strokeStyle = "black";
+//   // if (anchor && !attachedPoint) {
+//   //   ctx.setLineDash([5, 15]);
+//   //   const rx = Math.min(anchor[0], mouseX);
+//   //   const ry = Math.min(anchor[1], mouseY);
+//   //   const rw = Math.abs(anchor[0] - mouseX);
+//   //   const rh = Math.abs(anchor[1] - mouseY);
+//   //   ctx.rect(rx, ry, rw, rh);
+//   //   ctx.stroke();
+//   //   ctx.setLineDash([]);
+//   // }
 
 
-  const p = closestPoint(mouseX, mouseY);
-  if (p[2] < 25) {
-      if (colorIndex < 0) {
-        ctx.beginPath();
-        ctx.arc(p[0], p[1], 10, 0, 2 * Math.PI);
-        ctx.stroke();    
-      }
-  } else {
-    const bp = bestPointOnLine(mouseX, mouseY);
-    if (bp[2] < 25) {
-        ctx.beginPath();
-        ctx.moveTo(bp[0], bp[1]);
-        ctx.lineTo(mouseX, mouseY);
-        ctx.moveTo(bp[0], bp[1]);
-        ctx.arc(bp[0], bp[1], 5, 0, 2 * Math.PI);
-        ctx.stroke();
-    }
-  }
-
-  ctx.fillStyle = "black";
-  ctx.font = "24px serif";
-
-  for (let i = 0; i < lines.length; i+=2) {
-      ctx.fillText(`${i / 2+1}`, lines[i], lines[i+1])
-      ctx.beginPath();
-      ctx.arc(lines[i], lines[i+1], 3, 0, 2 * Math.PI);
-      ctx.stroke();    
-  }
-//  console.log(p);
+//   if (colorIndex >= 0) {
+//     ctx.strokeStyle = "blue";
+//     ctx.beginPath();
+//     ctx.moveTo(lines[colorIndex], lines[colorIndex + 1]);
+//     ctx.lineTo(lines[colorIndex + 2], lines[colorIndex + 3])
+//     ctx.lineTo(lines[colorIndex + 4], lines[colorIndex + 5])
+//     ctx.stroke();
+//   }
+//   ctx.strokeStyle = "black";
 
 
+//   const p = closestPoint(mouseX, mouseY);
+//   if (p[2] < 25) {
+//       if (colorIndex < 0) {
+//         ctx.beginPath();
+//         ctx.arc(p[0], p[1], 10, 0, 2 * Math.PI);
+//         ctx.stroke();    
+//       }
+//   } else {
+//     const bp = bestPointOnLine(mouseX, mouseY);
+//     if (bp[2] < 25) {
+//         ctx.beginPath();
+//         ctx.moveTo(bp[0], bp[1]);
+//         ctx.lineTo(mouseX, mouseY);
+//         ctx.moveTo(bp[0], bp[1]);
+//         ctx.arc(bp[0], bp[1], 5, 0, 2 * Math.PI);
+//         ctx.stroke();
+//     }
+//   }
 
-//drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+//   ctx.fillStyle = "black";
+//   ctx.font = "24px serif";
+
+//   for (let i = 0; i < lines.length; i+=2) {
+//       ctx.fillText(`${i / 2+1}`, lines[i], lines[i+1])
+//       ctx.beginPath();
+//       ctx.arc(lines[i], lines[i+1], 3, 0, 2 * Math.PI);
+//       ctx.stroke();    
+//   }
+// //  console.log(p);
 
 
-  return;
+
+// //drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+
+
+//   return;
 
 
 
@@ -724,22 +706,22 @@ function loop(now) {
           const theY = k[1] * rat + anotherF.y * (1-rat);
 
           f.shift = [k[0]*close+f.x*(1-close) + Math.random() * radius*2 - radius, k[1]*close + f.y*(1-close) + Math.random() * radius*2 - radius];
-          // let ok = true;
+          let ok = true;
 
-          // for (let ff of followers) {
-          //   if (ff.shift && ff !== f) {
-          //     const dfx = ff.shift.x - f.shift.x;
-          //     const dfy = ff.shift.y - f.shift.y;
-          //     const ddd = dfx*dfx + dfy*dfy;
-          //     if (ddd *ddd < radius * radius) {
-          //       ok = false;
-          //       break;
-          //     }
-          //   }
-          // }
-          // if (ok) {
-          //   break;
-          // }
+          for (let ff of followers) {
+            if (ff.shift && ff !== f) {
+              const dfx = ff.shift.x - f.shift.x;
+              const dfy = ff.shift.y - f.shift.y;
+              const ddd = dfx*dfx + dfy*dfy;
+              if (ddd *ddd < radius * radius) {
+                ok = false;
+                break;
+              }
+            }
+          }
+          if (ok) {
+            break;
+          }
         }
       }
       const destX = f.shift[0] - f.x;
@@ -820,9 +802,18 @@ document.addEventListener("keydown", (e) => {
   keys[e.key] = true;
 //  console.log(e.key);
   if (e.key === "f") {
-    followers.push({x:Math.random() * 1000 + sh[0], y:Math.random() * 1000 + sh[1], mx: 0, my: 0});
+    addFollower();
+//    followers.push({x:Math.random() * 1000 + sh[0], y:Math.random() * 1000 + sh[1], mx: 0, my: 0});
   }
 });
+
+function addFollower() {
+  followers.push({x:Math.random() * 1000 + sh[0], y:Math.random() * 1000 + sh[1], mx: 0, my: 0});
+}
+
+addFollower();
+addFollower();
+addFollower();
 
 
 function penTo(x, y, current, points) {
