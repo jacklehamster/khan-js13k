@@ -7,15 +7,17 @@ cs.border = "1px solid black";
 cs.backgroundColor = "#efd";
 cs.transition = "background-color 0.5s";
 
-const zoom = .8;
+const zoom = .75;
 const keys = {};
 document.addEventListener("keyup", (e) => {
   delete keys[e.code];
 });
 document.addEventListener("keydown", (e) => {
   keys[e.code] = true;
+  e.preventDefault();
 });
 const accumulator = [];
+const liveFoes = [];
 
 const sh = [0,0];
 
@@ -77,13 +79,22 @@ function showFrame(ctx, x, y, w, h, frame, anim, color, ddy, random, debug) {
 
 function moveTo(ctx, offsetX, offsetY, x, y, penDown, w, h, ddy, random) {
   if (penDown) {
-      ctx.lineTo(offsetX + x, offsetY + y + (x/w - .5)*5 * ddy + random * (Math.random() - .5));
+      ctx.lineTo(offsetX + x, offsetY + y + (x/w - .5)*15 * ddy + random * (Math.random() - .5));
   } else {
-      ctx.moveTo(offsetX + x, offsetY + y + (x/w - .5)*5 * ddy + random * (Math.random() - .5));
+      ctx.moveTo(offsetX + x, offsetY + y + (x/w - .5)*15 * ddy + random * (Math.random() - .5));
   }
 }
 
-const threshold = 1;
+const threshold = .5;
+
+function removeArrow(index) {
+  arrows[index].x = arrows[arrowSize - 1].x;
+  arrows[index].y = arrows[arrowSize - 1].y;
+  arrows[index].dx = arrows[arrowSize - 1].dx;
+  arrows[index].dy = arrows[arrowSize - 1].dy;
+  arrows[index].born = arrows[arrowSize - 1].born;
+  arrowSize--;
+}
 
 let arrowSize = 0;
 const arrows = [];
@@ -92,10 +103,10 @@ function shootArrow(sprite) {
   if (arrowSize >= arrows.length) {
     arrows.push({});
   }
-  arrows[arrowSize].x = x;
-  arrows[arrowSize].y = y - 80 * zoom;
   arrows[arrowSize].dx = archerOrientation * 120 + dx * 2;
   arrows[arrowSize].dy = - 5 + dy * 10;
+  arrows[arrowSize].x = x + arrows[arrowSize].dx;
+  arrows[arrowSize].y = y - 80 * zoom;
   arrows[arrowSize].born = sprite.time;
   arrowSize++;
 }
@@ -108,7 +119,7 @@ function processMovement(sprite) {
     if (ax !== 0) {
       sprite.orientation = ax;
     }
-    const speed = evaluate(sprite.speed, sprite);
+    const speed = evaluate(sprite.speed, sprite) * (sprite.dead ? 2 : 1) * (sprite.superSoldier && sprite.soldier ? .7 : 1);
     const brake = sprite.brake;
     if (da) {
       sprite.dx = (sprite.dx + ax / da * speed) * brake;
@@ -128,7 +139,7 @@ function processMovement(sprite) {
 const sprite = {
   parent: true,
   time: 0,
-  lastShot: 0,
+  nextShot: 0,
   process: (sprite) => {
     if (!sprite.parent) {
       return;
@@ -139,9 +150,9 @@ const sprite = {
     if (!shooting) {
       sprite.archerOrientation = sprite.orientation;
     } else {
-      if (sprite.time - sprite.lastShot > evaluate(sprite.shootPeriod, sprite)) {
+      if (sprite.time > sprite.nextShot) {
         shootArrow(sprite);
-        sprite.lastShot = sprite.time;
+        sprite.nextShot = sprite.time + evaluate(sprite.shootPeriod, sprite);
       }
     }
   },
@@ -150,7 +161,10 @@ const sprite = {
   orientation: 1,
   direction: undefined,
   brake: .99,
-  speed: .1,
+  // speed: .1,
+  // speed: .06,
+  // speed: .05,
+  speed: sprite => evaluate(sprite.shooting, sprite) ? 0.05 : .09,
   x: 300, y: 500,
   moving: sprite => Math.abs(sprite.dx) > threshold || Math.abs(sprite.dy) > threshold,
   shooting: () => keys.Space,
@@ -179,29 +193,30 @@ const sprite = {
       parent: false,
       sprites: undefined,
       animation: sprite => evaluate(sprite.riderAnimation, sprite),
-      range: sprite => sprite.rangeOverride ?? evaluate(sprite.shooting, sprite) ? [0, 3] : [0],
+      range: sprite => sprite.rangeOverride ?? (evaluate(sprite.shooting, sprite) ? [0, 3] : [0]),
       hotspot: [
         sprite => evaluate(sprite.moving, sprite) ? .5 - sprite.orientation * evaluate(sprite.archerOrientation, sprite) * .05 : .53,
         sprite => evaluate(sprite.moving, sprite) ? .65 + Math.sin(sprite.horseFrame * .7) / 100 : .7,
       ],
-      color: sprite => sprite.tree ? "#270" : sprite.foe ? "#f0a" : "black",
+      color: sprite => sprite.foeColor  ?? (sprite.corpse ? sprite.color : sprite.hill ? "#af8" : sprite.tree ? "#270" : "black"),
       direction: (sprite) => Math.sign(evaluate(sprite.archerOrientation, sprite)),
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
       random: 4,
+      hidden: sprite => sprite.dead,
     }, sprite),
     sprite => evaluate({
       ...sprite,
       y: sprite => evaluate(sprite.y, sprite),
       parent: false,
       sprites: undefined,
-      animation: "horse",
-      range: (sprite) => evaluate(sprite.moving, sprite) ? [0, 10]: [11],
+      animation: sprite => sprite.hill ? "hut" : "horse",
+      range: (sprite) => sprite.hill ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
       hotspot: [.47, .72],
-      color: sprite => sprite.foe ? "#004" : "#630",
+      color: sprite => sprite.superSoldier ? "#a08" : sprite.foe ? "#004" : "#630",
       direction: (sprite) => Math.sign(sprite.orientation),
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
       random: 4,
-      hidden: sprite => sprite.tree,
+      hidden: sprite => (sprite.tree && !sprite.hill) || sprite.corpse || sprite.soldier,
     }, sprite),
     sprite => evaluate({
       ...sprite,
@@ -214,20 +229,24 @@ const sprite = {
       color: "#69f",
       direction: (sprite) => Math.sign(sprite.orientation),
       frame: (sprite) => 0,
-      hidden: sprite => sprite.foe || sprite.foe,
+      hidden: sprite => sprite.foe || sprite.corpse || sprite.soldier,
     }, sprite),
     sprite => evaluate({
       ...sprite,
       layer: -2,
       parent: false,
       sprites: undefined,
-      animation: sprite => sprite.tree ? "tree" : "horse",
-      range: (sprite) => sprite.tree ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
+      animation: sprite => sprite.soldier ? "soldier" : sprite.corpse ? "dead" : sprite.hill ? "hill" : sprite.tree ? "tree" : "horse",
+      range: (sprite) => sprite.corpse ? sprite.rangeOverride : sprite.tree ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
+
+//      range: sprite => sprite.rangeOverride ?? (evaluate(sprite.shooting, sprite) ? [0, 3] : [0]),
+
       hotspot: (sprite) => sprite.tree ? [.53, 1] : [.47, .72],
       color: "#999",
       direction: (sprite) => Math.sign(sprite.orientation),
       height: -50,
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
+      hidden: sprite => sprite.dead && sprite.soldier,
     }, sprite),
   ],
 };
@@ -252,13 +271,39 @@ function showSprite(sprite, time, dt, accumulator) {
   sprite.time = time;
   const sprites = evaluate(sprite.sprites, sprite);
   sprites.forEach(sprite => {
-    const { x, y, width, height, hotspot } = sprite;
+    const { x, y, width, height, hotspot, foeIndex, dead, color, foeColor, superSoldier, soldier } = sprite;
     const left = x - hotspot[0] * width - sh[0];
     const top = y - hotspot[1] * height - sh[1];
     const right = left + width;
     const bottom = top + height;
     if (right < 0 || bottom < 0 || left > canvas.width || top > canvas.height) {
       return;
+    }
+    if (foeIndex !== undefined && !dead) {
+      for (let i = arrowSize - 1; i >= 0; i--) {
+        const arrow = arrows[i];
+        if (arrow.x - sh[0] > left && arrow.x - sh[0] < right && arrow.y - sh[1] > top && arrow.y - sh[1] < bottom) {
+          const hit = superSoldier ? Math.random() < .05 : true;
+
+          if (hit) {
+            foes[foeIndex].dead = time;    
+            addCorpse(foes[foeIndex], time, arrow.dx, foeColor ?? color);
+  
+            const gx = hero.x - foes[foeIndex].x;
+            const gy = hero.y - foes[foeIndex].y;
+            const gdist = Math.sqrt(gx*gx + gy*gy);
+            foes[foeIndex].dx = 0;
+            foes[foeIndex].dy = 0;
+            foes[foeIndex].goal[0] = foes[foeIndex].x + -gx / gdist * 2000;
+            foes[foeIndex].goal[1] = foes[foeIndex].y + -gy / gdist * 2000;  
+          } else {
+            foes[foeIndex].hitTime = time;
+          }
+
+          removeArrow(i);
+          hero.nextShot = time + 50;
+        }
+      }  
     }
 
     accumulator.push(sprite);
@@ -281,18 +326,36 @@ function showSprite(sprite, time, dt, accumulator) {
 const cacheBox = {};
 
 function display(s) {
-    const { x, y, width, height, animation, horseFrame, range, hotspot, color, direction, dy, random, hidden, cache } = s;
+    let { x, y, width, height, animation, horseFrame, range, hotspot, color, time, hitTime, dead, direction, dy, random, hidden, cache, hero } = s;
     if (hidden) {
       return;
     }
-    const frame = range[0] + (range.length <= 1 ? 0 : Math.floor(horseFrame) % (range[1] - range[0]));
+    // if (dead) {
+    //   color = "red";
+    //   return;
+    // }
+    if (hitTime && time - hitTime < 50) {
+      color = hero ? "red" : "white";
+    }
+    let frame = range[0] + (range.length <= 1 ? 0 : Math.floor(horseFrame) % (range[1] - range[0] + 1));
     const dir = evaluate(direction, sprite);
     const ddy = evaluate(dy, sprite);
+
+    // if (animation === "dead") {
+    //   //frame = 3;
+    //   console.log(animation, horseFrame, frame, color, range);
+    //   // console.log(tag);
+    // }
+
+
     if (cache) {
       const anim = root.animations.indexOf(animation);
       const tag = `${animation}-${frame}-${color}-${dir}-${width}-${height}`;
+
+  
+
       if (!cacheBox[tag]) {
-        //console.log(tag);
+//        console.log(tag);
         cacheBox[tag] = {
           canvas: document.createElement("canvas"),
         };
@@ -300,7 +363,7 @@ function display(s) {
         cacheBox[tag].canvas.height = height;
         cacheBox[tag].canvas.getContext("2d").lineWidth = 6;
         cacheBox[tag].canvas.getContext("2d").strokeStyle = "black";
-//        document.body.appendChild(cacheBox[tag].canvas);
+// /       document.body.appendChild(cacheBox[tag].canvas);
 
         showFrame(cacheBox[tag].canvas.getContext("2d"), dir < 0 ? width : 0, height < 0 ? -height : 0, width * dir, height, frame, anim, color, 0, 0);
       }
@@ -339,33 +402,92 @@ function copy(sprite) {
   return sprite;
 }
 
-const hero = copy(sprite);
+const hero = {...copy(sprite), hero: true};
 
 let shake = 0;
 let shakeSize = 0;
 
-const foes = new Array(100).fill(0).map(() => {
+
+const corpses = [];
+
+function addCorpse(foe, time, dx, color) {
+  const corpse = {
+    ...copy(sprite),
+    corpse: true,
+    horseFrame: 0,
+    x: foe.x,
+    y: foe.y,
+    rangeOverride: [0, 4],
+    range: undefined,
+    archerOrientation: dx < 0 ? 1 : -1,
+    cache: true,
+    riderAnimation: "dead",
+    born: time,
+    color,
+    process: (sprite) => {
+      const ft = sprite.time - sprite.born;
+      const frame = Math.floor(ft / 50);
+//      console.log(ft);
+      sprite.horseFrame = Math.min(frame, sprite.rangeOverride[1]);
+      if (sprite.horseFrame < sprite.rangeOverride[1]) {
+        sprite.x += dx * sprite.dt / 1000;
+      }
+    },
+    width: foe.width,
+    height: foe.height,
+  };
+  if (corpses.length > 200) {
+    corpses.shift();
+  }
+  corpses.push(corpse);
+  return corpse;
+}
+
+let hitCount = 0;
+
+const foesLength = 100;
+const foes = new Array(foesLength).fill(0).map((_, index) => {
   const angle = Math.random() * Math.PI * 2;
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
 
+  const superSoldier = index / foesLength < .05;
+  const soldier = index % 3 <= 1;
+  if (superSoldier) {
+    console.log(superSoldier, soldier);    
+  }
 
+  const x = cos * (2000 + Math.random()*1000);
+  const y = sin * (2000 + Math.random()*1000);
   const foe = {
     ...copy(sprite),
+    superSoldier,
+    foeIndex: index,
+    foeColor: superSoldier ? (soldier ? "blue" : "#a00") : soldier ? "#75f" : "#f0a",
     horseFrame: Math.floor(Math.random() * 100),
-    goal: [0, 0],
+    goal: [x, y],
     gdist: 0,
     ax: (sprite) => (sprite.goal[0] - foe.x) / 2000,
     ay: (sprite) => (sprite.goal[1] - foe.y) / 2000,
-    x: cos * (2000 + Math.random()*1000),
-    y: sin * (2000 + Math.random()*1000),
-    rangeOverride: [0, 3],
-    speed: Math.max(.05, Math.random() / 15),//sprite => 10 / (evaluate(sprite.gdist, sprite) + 1),
+    x,
+    y,
+    rangeOverride: soldier ? [0, 4] : [0, 3],
+    // speed: Math.max(.03, Math.random() / 15),//sprite => 10 / (evaluate(sprite.gdist, sprite) + 1),
+    //  HARD vvv
+    speed: soldier ? Math.max(.025, Math.random() / 30) : Math.max(.03, Math.random() / 20),
+    //  MEDIUM vvv
+    // speed: soldier ? Math.max(.015, Math.random() / 40) : Math.max(.02, Math.random() / 30),
     archerOrientation: (sprite) => Math.sign(evaluate(sprite.dx, sprite)),
     cache: true,
+    soldier,
     process: (sprite) => {
       if (!sprite.parent) {
         return;
+      }
+      if (sprite.dead && sprite.time - sprite.dead > 5000) {
+        sprite.dead = 0;
+
+        sprite.speed = sprite.soldier ? Math.max(.025, Math.random() / 30) : Math.max(.03, Math.random() / 20);
       }
       processMovement(sprite);
       const gx = sprite.x - sprite.goal[0];
@@ -375,8 +497,9 @@ const foes = new Array(100).fill(0).map(() => {
       const hx = sprite.x - hero.x;
       const hy = sprite.y - hero.y;
       const hdist = Math.sqrt(hx * hx + hy * hy);
-      if (hdist < 40) {
-        console.log("HIT", hdist);
+      if (hdist < 50 && !sprite.dead) {
+        hitCount+= sprite.superSoldier ? 5 : 1;
+        console.log("HIT", hitCount, (hero.time - hero.born) / 1000 + "s");
         shakeSize = 40;
         cs.backgroundColor = "#a00";
         setTimeout(() => {
@@ -388,38 +511,59 @@ const foes = new Array(100).fill(0).map(() => {
         const sin = Math.sin(angle);
         sprite.x = hero.x + cos * 2000;
         sprite.y = hero.y + sin * 2000;
+        hero.dx = 0;
+        hero.dy = 0;
+        hero.hitTime = hero.time;
+
       }
-      if (hdist > 3000) {
-        const angle = Math.random() * Math.PI * 2;
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-        sprite.x = hero.x + cos * 2000;
-        sprite.y = hero.y + sin * 2000;
+      if (hdist > 2500) {
+        if (Math.random() < .6 || (!hero.dx && !hero.dy)) {
+          const angle = Math.random() * Math.PI * 2;
+          const cos = Math.cos(angle);
+          const sin = Math.sin(angle);
+          sprite.x = hero.x + cos * 1500;
+          sprite.y = hero.y + sin * 1500;  
+        } else {
+          const ddd = Math.sqrt(hero.dx * hero.dx + hero.dy * hero.dy);
+          sprite.x = hero.x + hero.dx * (1000 + Math.random() * 500) / ddd + (Math.random() - .5) * 300;
+          sprite.y = hero.y + hero.dy * (1000 + Math.random() * 500) / ddd + (Math.random() - .5) * 300;
+        }
+        if (sprite.dead) {
+          sprite.dead = 0;
+
+          sprite.speed = sprite.soldier ? Math.max(.025, Math.random() / 30) : Math.max(.03, Math.random() / 20);
+        }
+        sprite.gdist = 0;
       }
 
-      if (sprite.gdist < 100 || hdist > 3000) {
-        sprite.goal[0] = hero.x + (hero.x - sprite.x) + (Math.random()-.5) * 300;
-        sprite.goal[1] = hero.y + (hero.y - sprite.y) + (Math.random()-.5) * 300;
+      if (sprite.gdist < 100 || hdist > (sprite.soldier ? 500 : 3000)) {
+        sprite.goal[0] = hero.x + (hero.x - sprite.x) + (Math.random()-.5) * (sprite.soldier ? 200 : 300);
+        sprite.goal[1] = hero.y + (hero.y - sprite.y) + (Math.random()-.5) * (sprite.soldier ? 200 : 300);
+        // if (sprite.dead) {
+        //   sprite.dead = false;
+        // }
       }
     },
     foe: true,
-    width: 220 * zoom,
-    height: 180 * zoom,
-    riderAnimation: "sword",
+    width: (soldier ? 200 * zoom: 220 * zoom) * (superSoldier ? (soldier ? 2:1.5) : 1),
+    height: (soldier ? 180 *zoom: 180 * zoom) * (superSoldier ? (soldier ? 2:1.5) : 1),
+    riderAnimation: soldier ? "soldier" : "sword",
   };
   return foe;
 });
 
 
-const trees = new Array(50).fill(0).map(() => {
+const treeCount = 30;//200;
+const trees = new Array(treeCount).fill(0).map((_, index) => {
   // const angle = Math.random() * Math.PI * 2;
   // const cos = Math.cos(angle);
   // const sin = Math.sin(angle);
+  const isHill = index / treeCount < .01;
   const tree = {
     ...copy(sprite),
     cache: true,
-    x: Math.random() * 5000 - 2500,
-    y: Math.random() * 5000 - 2500,
+    x: Math.random() * 4000 - 2000,
+    y: Math.random() * 4000 - 2000,
     // x: cos * (2000 + Math.random()*1000),
     // y: sin * (2000 + Math.random()*1000),
     process: (sprite) => {
@@ -429,9 +573,9 @@ const trees = new Array(50).fill(0).map(() => {
       const hx = sprite.x - hero.x;
       const hy = sprite.y - hero.y;
       const hdist = Math.sqrt(hx * hx + hy * hy);
-      if (hdist < 40) {
-        console.log("TREE", hdist);
-        shakeSize = 30;
+      if (hdist < (isHill ? 80 : 50)) {
+//        console.log("TREE", hdist);
+        shakeSize = 20;
         hero.x -= hx;
         hero.y -= hy;
         hero.dx = 0;
@@ -447,22 +591,25 @@ const trees = new Array(50).fill(0).map(() => {
         // sprite.x = hero.x + cos * 2000;
         // sprite.y = hero.y + sin * 2000;
       }
-      if (hx > 3000) {
-        sprite.x -= 5000;
-      } else if (hx < -3000) {
-        sprite.x += 5000;
+      if (hx > 2500) {
+        sprite.x -= 4000;
+      } else if (hx < -2500) {
+        sprite.x += 4000;
       }
-      if (hy > 3000) {
-        sprite.y -= 5000;
-      } else if (hy < -3000) {
-        sprite.y += 5000;
+      if (hy > 2500) {
+        sprite.y -= 4000;
+      } else if (hy < -2500) {
+        sprite.y += 4000;
       }
     },
     foe: true,
-    width: 500 * zoom,
-    height: 350 * zoom,
-    riderAnimation: "tree",
+    width: (isHill ? 600 : 500) * zoom,
+    height: (isHill ? 400 : 350 + Math.random() * 200) * zoom,
+    riderAnimation: isHill ? "hut" : "tree",
+    foeColor: isHill ? `rgb(${100 + Math.random() * 55}, ${100 + Math.random()* 55}, ${Math.random() * 100})` : `rgb(${Math.random() * 30}, ${Math.random() * 150}, ${Math.random()*20})`,
     tree: true,
+    hill: isHill,
+    rangeOverride: isHill ? [1] : undefined,
   };
   return tree;
 });
@@ -510,24 +657,25 @@ function loop(time) {
   ctx.stroke();
 
   for (let i = arrowSize - 1; i >= 0; i--) {
-    if (time - arrows[i].born > 1000) {
-      arrows[i].x = arrows[arrowSize - 1].x;
-      arrows[i].y = arrows[arrowSize - 1].y;
-      arrows[i].dx = arrows[arrowSize - 1].dx;
-      arrows[i].dy = arrows[arrowSize - 1].dy;
-      arrows[i].born = arrows[arrowSize - 1].born;
-      arrowSize--;
+    if (time - arrows[i].born > 1500) {
+      removeArrow(i);
     }
   }
+
+//  console.log(arrowSize);
 
   ctx.strokeStyle = "#380";
   ctx.lineWidth = 2;
 
+  liveFoes.length = 0;
   accumulator.length = 0;
   drawGround(accumulator);
   showSprite(hero, time, dt, accumulator);
   foes.forEach(foe => {
     showSprite(foe, time, dt, accumulator);
+  });
+  corpses.forEach(corpse => {
+    showSprite(corpse, time, dt, accumulator);
   });
   trees.forEach(tree => {
     showSprite(tree, time, dt, accumulator);
@@ -549,20 +697,23 @@ function drawGround() {
   const spacing = 200;
   ctx.beginPath();
   const cell = [Math.round(sh[0] / spacing), Math.round(sh[1] / spacing)];
-  for (let y = -20; y < 20; y++) {
-    for (let x = -20; x < 20; x++) {
+  for (let y = -10; y < 10; y++) {
+    for (let x = -15; x < 15; x++) {
       const xx = x + cell[0];
       const yy = y + cell[1];
-      const diffx = Math.sin(xx *123 + yy * 9991);
-      const diffy = Math.cos(xx *12331 + yy * 2221);
+      const diffx = Math.sin(xx *123 + yy * 9991) + Math.sin(xx *123 / 10 + yy * 9991 / 100) + Math.sin(xx *123 / 10 + yy * 9991 / 100);
+      const diffy = Math.cos(xx *12331 + yy * 2221) + Math.cos(xx *12331 / 10 + yy * 2221 / 10) + Math.cos(xx *12331 / 100 + yy * 2221 / 100);
       const zx = diffx * 500;
       const zy = diffy * 200;
-      ctx.moveTo(xx * spacing - sh[0] + zx, yy * spacing - sh[1] + shake + zy);
-      ctx.lineTo(xx * spacing + diffx * 100 - sh[0] + zx, yy * spacing - sh[1] + shake + zy + 3);
-      ctx.lineTo(xx * spacing + diffx * 100 - sh[0] + zx + diffy * 100, yy * spacing - sh[1] + shake + zy);
+      const posX = xx * spacing - sh[0] + zx;
+      const posY = yy * spacing - sh[1] + zy
+      ctx.moveTo(posX, posY + shake);
+      ctx.lineTo(posX + diffx * 100, posY + shake + 3);
+      ctx.lineTo(posX + diffx * 100 + diffy * 100, posY + shake);
     }
   }
   ctx.stroke();  
+
 
   // ctx.fillStyle = "#390";
   // ctx.beginPath();

@@ -124,7 +124,11 @@ function onAnimChange() {
 }
 
 function findShape() {
-  if (!root.shapes[shapeId] || (root.shapes[shapeId].anim ?? 0) === (root.anim ?? 0)) {
+  if (!root.shapes[shapeId]) {
+    shapeId = 0;
+    return;
+  }
+  if ((root.shapes[shapeId].anim ?? 0) === (root.anim ?? 0)) {
     return;
   }
   let s = shapeId;
@@ -149,7 +153,7 @@ ctx.lineWidth = 2;
 
 
 const img = new Image();
-img.src = "horse.jpg";
+img.src = window.model ?? "horse.jpg";
 
 
 function findNearestPointOnLine(px, py, ax, ay, bx, by)
@@ -392,15 +396,26 @@ function onUpdatedShape() {
     x.style.color = "red";
     x.style.cursor = "pointer";
     x.textContent = "x";
-    x.style.display = shape.lines.length > 1 ? "" : "none";
+//    x.style.display = shape.lines.length > 1 ? "" : "none";
     x.addEventListener("mousedown", () => {
       shape.lines.pop();
-      slide = Math.min(slide, shape.lines.length - 1);
+      if (!shape.lines.length) {
+        root.shapes = root.shapes.filter(shape => shape.lines.length);        
+        console.log(shapeId);
+        findShape();
+        console.log(shapeId);
+        onAnimChange();
+        onUpdatedShape();
+        refreshTabs();
+        onSlideChange();
+      } else {
+        slide = Math.min(slide, shape.lines.length - 1);
 
-      refreshFrameButtons();
-      onUpdatedShape();
-      refreshTabs();
-      onSlideChange();
+        refreshFrameButtons();
+        onUpdatedShape();
+        refreshTabs();
+        onSlideChange();  
+      }
 
 //      console.log(shapeIndex);
     });
@@ -585,7 +600,7 @@ function loop(now) {
 
 
 
-  const imgW = 104, imgH = 68;
+  const imgW = window.imgW ?? 104, imgH = window.imgH ?? 68;
   const sx = (slide % 4) * imgW;
   const sy = Math.floor(slide / 4) * imgH;
   ctx.drawImage(img, sx, sy, imgW, imgH, 0, 0, 1600, 900);
@@ -965,6 +980,7 @@ renameButton.style.position = "absolute";
 renameButton.style.right = "10px";
 renameButton.style.top = "70px";
 renameButton.textContent = "rename";
+renameButton.style.width = "80px";
 renameButton.addEventListener("click", () => {
   const data = encodeShape(root);
   root.animations[root.anim] = prompt("New animation name", root.animations[root.anim]);
@@ -976,6 +992,7 @@ downloadButton.style.position = "absolute";
 downloadButton.style.right = "10px";
 downloadButton.style.top = "10px";
 downloadButton.textContent = "export";
+downloadButton.style.width = "80px";
 downloadButton.addEventListener("click", () => {
   const data = encodeShape(root);
   downloadBlob(data, 'rider.13k', 'application/octet-stream');
@@ -1001,6 +1018,7 @@ const importButton = document.body.appendChild(document.createElement("button"))
 importButton.style.position = "absolute";
 importButton.style.right = "10px";
 importButton.style.top = "30px";
+importButton.style.width = "80px";
 importButton.textContent = "import";
 importButton.addEventListener("click", () => {
   const byteArray = load_binary_resource("rider.13k");
@@ -1025,6 +1043,7 @@ previewButton.style.position = "absolute";
 previewButton.style.right = "10px";
 previewButton.style.top = "50px";
 previewButton.textContent = "preview";
+previewButton.style.width = "80px";
 previewButton.addEventListener("click", () => {
   window.open("game.html");
 });
