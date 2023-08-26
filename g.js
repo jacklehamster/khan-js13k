@@ -17,10 +17,73 @@ document.addEventListener("keydown", (e) => {
   e.preventDefault();
 });
 const accumulator = [];
-const liveFoes = [];
 
 const sh = [0,0];
 
+
+// const upgrades = {
+//   speedWhileShooting: 0,
+//   speed: 0,
+//   maxHealth: 0,
+//   shield: 0,
+//   quickShot: 0,
+//   money: 0,
+// };
+
+const upgrades = {
+  speedWhileShooting: 2,
+  speed: 2,
+  maxHealth: 2,
+  shield: 0,
+  quickShot: 1,
+  money: 2,
+};
+
+
+
+const defaultmaxHealth = 6;
+
+let health = defaultmaxHealth;
+
+const healthDiv = document.body.appendChild(document.createElement("div"));
+healthDiv.style.position = "absolute";
+healthDiv.style.top = "10px";
+healthDiv.style.left = "10px";
+function showHealth() {
+  const maxHealth = defaultmaxHealth + upgrades.maxHealth * 2;
+  let str = "";
+  for (let i = 0; i < Math.floor(health / 2); i++) {
+    str += "❤️";
+  }
+  if (health % 2) {
+    str += "❤️‍🩹";
+  }
+  for (let i = Math.ceil(health / 2); i < maxHealth / 2; i++) {
+    str += "🩶";    
+  }
+  healthDiv.innerText = str;
+}
+
+let money = 0;
+const moneyDiv = document.body.appendChild(document.createElement("div"));
+moneyDiv.style.position = "absolute";
+moneyDiv.style.top = "30px";
+moneyDiv.style.left = "10px";
+function showMeTheMoney() {
+  moneyDiv.textContent = !money ? "" : `⭐ ${money}`;
+}
+
+
+const gameOverDiv = document.body.appendChild(document.createElement("div"));
+gameOverDiv.style.position = "absolute";
+gameOverDiv.style.top = "50px";
+gameOverDiv.style.left = "10px";
+gameOverDiv.style.color = "snow";
+gameOverDiv.textContent = "Press ESC to continue";
+gameOverDiv.style.display = "none";
+function showGameOver() {
+  gameOverDiv.style.display = "";
+}
 
 function load_binary_resource(url) {
   const byteArray = [];
@@ -136,6 +199,15 @@ function processMovement(sprite) {
     sprite.horseFrame += dtt * Math.max(.08, dist / 50);
 }
 
+function exitHut(hut) {
+    hero.x = hut.x;
+    hero.y = hut.y + 200;
+    hero.dx = 0;
+    hero.dy = 0;
+    hutInfo(inHut).closed = true;
+    inHut = null;
+}
+
 const sprite = {
   parent: true,
   time: 0,
@@ -144,6 +216,29 @@ const sprite = {
     if (!sprite.parent) {
       return;
     }
+    if (inHut) {
+      if (keys.Escape) {
+        exitHut(inHut);
+        gameOverDiv.style.display = "none";
+      } else {
+        return;
+      }
+    }
+    if (!health) {
+      if (keys.Escape) {
+        health = defaultmaxHealth + upgrades.maxHealth * 2;
+        money = 0;
+        hero.dead = 0;
+        gameOverDiv.style.display = "none";
+        showMeTheMoney();
+        showHealth();
+      }
+    }
+    if (!health && sprite.hero) {
+      return;
+    }
+
+
     processMovement(sprite);
 
     const shooting = evaluate(sprite.shooting, sprite);
@@ -164,7 +259,9 @@ const sprite = {
   // speed: .1,
   // speed: .06,
   // speed: .05,
-  speed: sprite => evaluate(sprite.shooting, sprite) ? 0.05 : .09,
+  speed: sprite => evaluate(sprite.shooting, sprite) ?
+    0.03 + upgrades.speedWhileShooting * 0.02 :
+    .05 + upgrades.speed * 0.03,
   x: 300, y: 500,
   moving: sprite => Math.abs(sprite.dx) > threshold || Math.abs(sprite.dy) > threshold,
   shooting: () => keys.Space,
@@ -193,12 +290,12 @@ const sprite = {
       parent: false,
       sprites: undefined,
       animation: sprite => evaluate(sprite.riderAnimation, sprite),
-      range: sprite => sprite.rangeOverride ?? (evaluate(sprite.shooting, sprite) ? [0, 3] : [0]),
+      range: sprite => evaluate(sprite.rangeOverride, sprite) ?? (evaluate(sprite.shooting, sprite) ? [0, 3] : [0]),
       hotspot: [
         sprite => evaluate(sprite.moving, sprite) ? .5 - sprite.orientation * evaluate(sprite.archerOrientation, sprite) * .05 : .53,
         sprite => evaluate(sprite.moving, sprite) ? .65 + Math.sin(sprite.horseFrame * .7) / 100 : .7,
       ],
-      color: sprite => sprite.foeColor  ?? (sprite.corpse ? sprite.color : sprite.hill ? "#af8" : sprite.tree ? "#270" : "black"),
+      color: sprite => evaluate(sprite.foeColor, sprite)  ?? (sprite.corpse ? sprite.color : sprite.hill ? "#af8" : sprite.tree ? "#270" : "black"),
       direction: (sprite) => Math.sign(evaluate(sprite.archerOrientation, sprite)),
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
       random: 4,
@@ -212,10 +309,10 @@ const sprite = {
       animation: sprite => sprite.hill ? "hut" : "horse",
       range: (sprite) => sprite.hill ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
       hotspot: [.47, .72],
-      color: sprite => sprite.superSoldier ? "#a08" : sprite.foe ? "#004" : "#630",
+      color: sprite => sprite.hill && hutInfo(sprite).closed ? "#ba6" : sprite.superSoldier ? "#a08" : sprite.foe ? "#004" : "#630",
       direction: (sprite) => Math.sign(sprite.orientation),
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
-      random: 4,
+      random: sprite => sprite.superSoldier ? 100 : 4,
       hidden: sprite => (sprite.tree && !sprite.hill) || sprite.corpse || sprite.soldier,
     }, sprite),
     sprite => evaluate({
@@ -226,10 +323,10 @@ const sprite = {
       animation: "shield",
       range: [0],
       hotspot: [.47, .72],
-      color: "#69f",
+      color: () => upgrades.shield > 1 ? "gold" : "#69f",
       direction: (sprite) => Math.sign(sprite.orientation),
       frame: (sprite) => 0,
-      hidden: sprite => sprite.foe || sprite.corpse || sprite.soldier,
+      hidden: sprite => sprite.foe || sprite.corpse || sprite.soldier || !upgrades.shield,
     }, sprite),
     sprite => evaluate({
       ...sprite,
@@ -237,7 +334,7 @@ const sprite = {
       parent: false,
       sprites: undefined,
       animation: sprite => sprite.soldier ? "soldier" : sprite.corpse ? "dead" : sprite.hill ? "hill" : sprite.tree ? "tree" : "horse",
-      range: (sprite) => sprite.corpse ? sprite.rangeOverride : sprite.tree ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
+      range: (sprite) => sprite.corpse ? evaluate(sprite.rangeOverride, sprite) : sprite.tree ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
 
 //      range: sprite => sprite.rangeOverride ?? (evaluate(sprite.shooting, sprite) ? [0, 3] : [0]),
 
@@ -271,7 +368,10 @@ function showSprite(sprite, time, dt, accumulator) {
   sprite.time = time;
   const sprites = evaluate(sprite.sprites, sprite);
   sprites.forEach(sprite => {
-    const { x, y, width, height, hotspot, foeIndex, dead, color, foeColor, superSoldier, soldier } = sprite;
+    const { x, y, width, height, hotspot, foeIndex, dead, color, foeColor, superSoldier, hidden, tree } = sprite;
+    if (hidden || (inHut && !tree)) {
+      return;
+    }
     const left = x - hotspot[0] * width - sh[0];
     const top = y - hotspot[1] * height - sh[1];
     const right = left + width;
@@ -296,12 +396,17 @@ function showSprite(sprite, time, dt, accumulator) {
             foes[foeIndex].dy = 0;
             foes[foeIndex].goal[0] = foes[foeIndex].x + -gx / gdist * 2000;
             foes[foeIndex].goal[1] = foes[foeIndex].y + -gy / gdist * 2000;  
+
+            money += (superSoldier ? 6 : 10) * (1 + .5 * upgrades.money);
+            showMeTheMoney();
           } else {
             foes[foeIndex].hitTime = time;
           }
 
           removeArrow(i);
-          hero.nextShot = time + 50;
+          if (upgrades.quickShot) {
+            hero.nextShot = time + 50;
+          }
         }
       }  
     }
@@ -326,14 +431,15 @@ function showSprite(sprite, time, dt, accumulator) {
 const cacheBox = {};
 
 function display(s) {
-    let { x, y, width, height, animation, horseFrame, range, hotspot, color, time, hitTime, dead, direction, dy, random, hidden, cache, hero } = s;
-    if (hidden) {
-      return;
-    }
+    let { x, y, width, height, animation, horseFrame, range, hotspot, color, time, hitTime, dead, direction, dy, random, hidden, cache, hero, hill } = s;
     // if (dead) {
     //   color = "red";
     //   return;
     // }
+    if (hill && !hutInfo(s).closed) {
+      nearHut = s;
+    }
+    
     if (hitTime && time - hitTime < 50) {
       color = hero ? "red" : "white";
     }
@@ -428,8 +534,9 @@ function addCorpse(foe, time, dx, color) {
       const ft = sprite.time - sprite.born;
       const frame = Math.floor(ft / 50);
 //      console.log(ft);
-      sprite.horseFrame = Math.min(frame, sprite.rangeOverride[1]);
-      if (sprite.horseFrame < sprite.rangeOverride[1]) {
+      const endFrame = evaluate(sprite.rangeOverride[1], sprite);
+      sprite.horseFrame = Math.min(frame, endFrame);
+      if (sprite.horseFrame < endFrame) {
         sprite.x += dx * sprite.dt / 1000;
       }
     },
@@ -445,6 +552,9 @@ function addCorpse(foe, time, dx, color) {
 
 let hitCount = 0;
 
+//  EASY vvvv
+//const foesLength = 10;
+//  HARD vvvv
 const foesLength = 100;
 const foes = new Array(foesLength).fill(0).map((_, index) => {
   const angle = Math.random() * Math.PI * 2;
@@ -453,9 +563,9 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
 
   const superSoldier = index / foesLength < .05;
   const soldier = index % 3 <= 1;
-  if (superSoldier) {
-    console.log(superSoldier, soldier);    
-  }
+  // if (superSoldier) {
+  //   console.log(superSoldier, soldier);    
+  // }
 
   const x = cos * (2000 + Math.random()*1000);
   const y = sin * (2000 + Math.random()*1000);
@@ -471,12 +581,14 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
     ay: (sprite) => (sprite.goal[1] - foe.y) / 2000,
     x,
     y,
-    rangeOverride: soldier ? [0, 4] : [0, 3],
+    rangeOverride: sprite => !evaluate(sprite.moving, sprite) ? [0] : soldier ? [0, 4] : [0, 3],
     // speed: Math.max(.03, Math.random() / 15),//sprite => 10 / (evaluate(sprite.gdist, sprite) + 1),
     //  HARD vvv
-    speed: soldier ? Math.max(.025, Math.random() / 30) : Math.max(.03, Math.random() / 20),
+    speed: soldier ? Math.max(.01, Math.random() / 30) : Math.max(.03, Math.random() / 20),
     //  MEDIUM vvv
-    // speed: soldier ? Math.max(.015, Math.random() / 40) : Math.max(.02, Math.random() / 30),
+    // speed: soldier ? Math.max(.01, Math.random() / 40) : Math.max(.02, Math.random() / 30),
+    //  EASY vvv
+    // speed: soldier ? Math.max(.01, Math.random() / 50) : Math.max(.015, Math.random() / 40),
     archerOrientation: (sprite) => Math.sign(evaluate(sprite.dx, sprite)),
     cache: true,
     soldier,
@@ -497,15 +609,23 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
       const hx = sprite.x - hero.x;
       const hy = sprite.y - hero.y;
       const hdist = Math.sqrt(hx * hx + hy * hy);
-      if (hdist < 50 && !sprite.dead) {
+      if (hdist < 50 && !sprite.dead && health) {
         hitCount+= sprite.superSoldier ? 5 : 1;
         console.log("HIT", hitCount, (hero.time - hero.born) / 1000 + "s");
+        health = Math.max(0, health - (superSoldier ? 2 : 1));
+        showHealth();
         shakeSize = 40;
         cs.backgroundColor = "#a00";
         setTimeout(() => {
           cs.backgroundColor = "#efd";
         }, 150);
-        
+
+        if (!health) {
+          addCorpse(hero, hero.time, (hero.x - sprite.x) * 2, hero.color);
+          hero.dead = hero.time;
+          showGameOver();
+        }
+
         const angle = Math.random() * Math.PI * 2;
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
@@ -516,33 +636,49 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
         hero.hitTime = hero.time;
 
       }
-      if (hdist > 2500) {
-        if (Math.random() < .6 || (!hero.dx && !hero.dy)) {
-          const angle = Math.random() * Math.PI * 2;
-          const cos = Math.cos(angle);
-          const sin = Math.sin(angle);
-          sprite.x = hero.x + cos * 1500;
-          sprite.y = hero.y + sin * 1500;  
-        } else {
-          const ddd = Math.sqrt(hero.dx * hero.dx + hero.dy * hero.dy);
-          sprite.x = hero.x + hero.dx * (1000 + Math.random() * 500) / ddd + (Math.random() - .5) * 300;
-          sprite.y = hero.y + hero.dy * (1000 + Math.random() * 500) / ddd + (Math.random() - .5) * 300;
-        }
-        if (sprite.dead) {
-          sprite.dead = 0;
 
-          sprite.speed = sprite.soldier ? Math.max(.025, Math.random() / 30) : Math.max(.03, Math.random() / 20);
+      if (nearHut || !health) {
+        if (!sprite.pausing) {
+          sprite.pausing = true;
+          const dx = sprite.x - (nearHut ?? hero).x;
+          const dy = sprite.y - (nearHut ?? hero).y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          sprite.goal[0] = hero.x + dx / dist * 2000;
+          sprite.goal[1] = hero.y + dy / dist * 2000;        
         }
-        sprite.gdist = 0;
-      }
+      } else {
+        if (sprite.pausing) {
+          sprite.pausing = false;
+        }
+        if (hdist > 2500) {
+          if (Math.random() < .6 || (!hero.dx && !hero.dy)) {
+            const angle = Math.random() * Math.PI * 2;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            sprite.x = hero.x + cos * 1500;
+            sprite.y = hero.y + sin * 1500;  
+          } else {
+            const ddd = Math.sqrt(hero.dx * hero.dx + hero.dy * hero.dy);
+            sprite.x = hero.x + hero.dx * (1000 + Math.random() * 500) / ddd + (Math.random() - .5) * 300;
+            sprite.y = hero.y + hero.dy * (1000 + Math.random() * 500) / ddd + (Math.random() - .5) * 300;
+          }
+          if (sprite.dead) {
+            sprite.dead = 0;
 
-      if (sprite.gdist < 100 || hdist > (sprite.soldier ? 500 : 3000)) {
-        sprite.goal[0] = hero.x + (hero.x - sprite.x) + (Math.random()-.5) * (sprite.soldier ? 200 : 300);
-        sprite.goal[1] = hero.y + (hero.y - sprite.y) + (Math.random()-.5) * (sprite.soldier ? 200 : 300);
-        // if (sprite.dead) {
-        //   sprite.dead = false;
-        // }
-      }
+            sprite.speed = sprite.soldier ? Math.max(.025, Math.random() / 30) : Math.max(.03, Math.random() / 20);
+          }
+          sprite.gdist = 0;
+        }
+
+        if (sprite.gdist < 100 || hdist > (sprite.soldier ? 500 : 3000)) {
+          sprite.goal[0] = hero.x + (hero.x - sprite.x) + (Math.random()-.5) * (sprite.soldier ? 200 : 300);
+          sprite.goal[1] = hero.y + (hero.y - sprite.y) + (Math.random()-.5) * (sprite.soldier ? 200 : 300);
+          // if (sprite.dead) {
+          //   sprite.dead = false;
+          // }
+        }
+
+      }      
     },
     foe: true,
     width: (soldier ? 200 * zoom: 220 * zoom) * (superSoldier ? (soldier ? 2:1.5) : 1),
@@ -552,18 +688,27 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
   return foe;
 });
 
+let nearHut = null;
+
+let inHut = null;
+
+const huts = {};
 
 const treeCount = 30;//200;
 const trees = new Array(treeCount).fill(0).map((_, index) => {
   // const angle = Math.random() * Math.PI * 2;
   // const cos = Math.cos(angle);
   // const sin = Math.sin(angle);
-  const isHill = index / treeCount < .01;
+  const isHill = index <= 1;
+  const repeatDistance = isHill ? 20000 : 4000;
+  const repeatCond = repeatDistance / 2 + 500;
   const tree = {
     ...copy(sprite),
     cache: true,
-    x: Math.random() * 4000 - 2000,
-    y: Math.random() * 4000 - 2000,
+    x: isHill ? index * repeatDistance : Math.random() * 4000 - 2000,
+    y: isHill ? index * repeatDistance / 2 : Math.random() * 4000 - 2000,
+    cellX: 0,
+    cellY: 0,
     // x: cos * (2000 + Math.random()*1000),
     // y: sin * (2000 + Math.random()*1000),
     process: (sprite) => {
@@ -575,11 +720,21 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
       const hdist = Math.sqrt(hx * hx + hy * hy);
       if (hdist < (isHill ? 80 : 50)) {
 //        console.log("TREE", hdist);
-        shakeSize = 20;
-        hero.x -= hx;
-        hero.y -= hy;
-        hero.dx = 0;
-        hero.dy = 0;
+        if (isHill && !hutInfo(sprite).closed) {
+          if (!inHut) {
+            inHut = sprite;
+            sprite.enteredHut = sprite.time;
+            health = defaultmaxHealth + upgrades.maxHealth * 2;
+            showHealth();
+            showGameOver();
+          }
+        } else {
+          shakeSize = 20;
+          hero.x -= hx;
+          hero.y -= hy;
+          hero.dx = 0;
+          hero.dy = 0;
+        }
         // cs.backgroundColor = "#a00";
         // setTimeout(() => {
         //   cs.backgroundColor = "#efd";
@@ -591,28 +746,39 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
         // sprite.x = hero.x + cos * 2000;
         // sprite.y = hero.y + sin * 2000;
       }
-      if (hx > 2500) {
-        sprite.x -= 4000;
-      } else if (hx < -2500) {
-        sprite.x += 4000;
+      if (hx > repeatCond * 2) {
+        sprite.x -= repeatDistance * 2;
+        sprite.cellX--;
+      } else if (hx < -repeatCond * 2) {
+        sprite.x += repeatDistance * 2;
+        sprite.cellX++;
       }
-      if (hy > 2500) {
-        sprite.y -= 4000;
-      } else if (hy < -2500) {
-        sprite.y += 4000;
+      if (hy > repeatCond) {
+        sprite.y -= repeatDistance;
+        sprite.cellY--;
+      } else if (hy < -repeatCond) {
+        sprite.y += repeatDistance;
+        sprite.cellY++;
       }
     },
     foe: true,
     width: (isHill ? 600 : 500) * zoom,
     height: (isHill ? 400 : 350 + Math.random() * 200) * zoom,
     riderAnimation: isHill ? "hut" : "tree",
-    foeColor: isHill ? `rgb(${100 + Math.random() * 55}, ${100 + Math.random()* 55}, ${Math.random() * 100})` : `rgb(${Math.random() * 30}, ${Math.random() * 150}, ${Math.random()*20})`,
+    foeColor: isHill ? `rgb(${200}, ${100 + index * 55}, ${50 + index * 50})` : `rgb(${Math.random() * 30}, ${Math.random() * 150}, ${Math.random()*20})`,
     tree: true,
     hill: isHill,
     rangeOverride: isHill ? [1] : undefined,
   };
   return tree;
 });
+
+function hutInfo(sprite) {
+  if (!huts[`${sprite.cellX}_${sprite.cellY}`]) {
+    huts[`${sprite.cellX}_${sprite.cellY}`] = {};
+  }
+  return huts[`${sprite.cellX}_${sprite.cellY}`];
+}
 
 
 
@@ -667,7 +833,6 @@ function loop(time) {
   ctx.strokeStyle = "#380";
   ctx.lineWidth = 2;
 
-  liveFoes.length = 0;
   accumulator.length = 0;
   drawGround(accumulator);
   showSprite(hero, time, dt, accumulator);
@@ -686,10 +851,23 @@ function loop(time) {
     }
     return Math.sign(a.y - b.y);
   });
+  nearHut = null;  //  display will find hut
   accumulator.forEach(s => display(s, time));
-  headStart += ((hero.dx * hero.archerOrientation < 0 ? 0 : hero.dx) / 2 + hero.archerOrientation * 2 - headStart) * .05;
-  sh[0] += hero.dt / 20 * (hero.x + headStart * 80 - canvas.width/2 - sh[0]) * .1;
-  sh[1] += hero.dt / 20 * (hero.y + hero.dy * 50 - canvas.height/2 - sh[1]) * .1;
+  if (!health) {
+    const deathTime = Math.min(.7, (time - hero.dead) / 3000);
+    ctx.fillStyle = `rgb(200,0,0,${deathTime})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fill();
+  } else if (!inHut) {
+    headStart += ((hero.dx * hero.archerOrientation < 0 ? 0 : hero.dx) / 2 + hero.archerOrientation * 2 - headStart) * .05;
+    sh[0] += hero.dt / 20 * (hero.x + headStart * 80 - canvas.width/2 - sh[0]) * .1;
+    sh[1] += hero.dt / 20 * (hero.y + hero.dy * 50 - canvas.height/2 - sh[1]) * .1;
+  } else {
+      const hutTime = Math.min(1, (time - inHut.enteredHut) / 500);
+      ctx.fillStyle = `rgb(0,0,0,${hutTime})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fill();
+  }
 }
 
 
@@ -697,8 +875,8 @@ function drawGround() {
   const spacing = 200;
   ctx.beginPath();
   const cell = [Math.round(sh[0] / spacing), Math.round(sh[1] / spacing)];
-  for (let y = -10; y < 10; y++) {
-    for (let x = -15; x < 15; x++) {
+  for (let y = -15; y < 15; y++) {
+    for (let x = -20; x < 20; x++) {
       const xx = x + cell[0];
       const yy = y + cell[1];
       const diffx = Math.sin(xx *123 + yy * 9991) + Math.sin(xx *123 / 10 + yy * 9991 / 100) + Math.sin(xx *123 / 10 + yy * 9991 / 100);
@@ -735,3 +913,7 @@ function drawGround() {
 
 }
 
+
+
+showHealth();
+showMeTheMoney();

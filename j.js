@@ -6,7 +6,7 @@ c.height = 1000; cs.height = "500px"
 cs.border = "1px solid black";
 
 const defaultprecision = 10;
-const defaultrandomess = 30;
+let defaultrandomess = 30;
 
 const thumby = document.body.appendChild(document.createElement("canvas"));
 thumby.style.position = "absolute";
@@ -1035,6 +1035,29 @@ importButton.addEventListener("click", () => {
   // const data = encodeShape(root);
   // downloadBlob(data, 'rider.13k', 'application/octet-stream');
   // console.log(data);
+});
+
+const randomLabel = document.body.appendChild(document.createElement("label"));
+randomLabel.for = "randomKnob";
+randomLabel.style.position = "absolute";
+randomLabel.style.right = "10px";
+randomLabel.style.top = "90px";
+randomLabel.textContent = "randomness";
+randomLabel.style.width = "80px";
+
+
+const randomKnob = document.body.appendChild(document.createElement("input"));
+randomKnob.id = "randomKnob";
+randomKnob.type = "range";
+randomKnob.style.position = "absolute";
+randomKnob.style.right = "10px";
+randomKnob.style.top = "110px";
+randomKnob.style.width = "80px";
+randomKnob.setAttribute("value", defaultrandomess);
+randomKnob.setAttribute("min", 0);
+randomKnob.setAttribute("max", 300);
+randomKnob.addEventListener("change", () => {
+  defaultrandomess = randomKnob.value;
 });
 
 
