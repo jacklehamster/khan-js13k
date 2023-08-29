@@ -860,8 +860,8 @@ function loop(time) {
     ctx.fill();
   } else if (!inHut) {
     headStart += ((hero.dx * hero.archerOrientation < 0 ? 0 : hero.dx) / 2 + hero.archerOrientation * 2 - headStart) * .05;
-    sh[0] += hero.dt / 20 * (hero.x + headStart * 80 - canvas.width/2 - sh[0]) * .1;
-    sh[1] += hero.dt / 20 * (hero.y + hero.dy * 50 - canvas.height/2 - sh[1]) * .1;
+    sh[0] += hero.dt / 20 * (hero.x - canvas.width/2 - sh[0] + headStart * 80) * .1;
+    sh[1] += hero.dt / 20 * (hero.y - canvas.height/2 - sh[1] + hero.dy * 50) * .1;
   } else {
       const hutTime = Math.min(1, (time - inHut.enteredHut) / 500);
       ctx.fillStyle = `rgb(0,0,0,${hutTime})`;
