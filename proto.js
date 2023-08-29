@@ -8,46 +8,46 @@ cs.border = "1px solid black";
 const defaultprecision = 10;
 const defaultrandomess = 30;
 
-const thumby = document.body.appendChild(document.createElement("canvas"));
-thumby.style.position = "absolute";
-thumby.style.width = "80px";
-thumby.style.height = "50px";
-thumby.width = 320;
-thumby.height = 200;
-thumby.style.backgroundColor = "white";
-thumby.style.border = "1px solid black";
+// const thumby = document.body.appendChild(document.createElement("canvas"));
+// thumby.style.position = "absolute";
+// thumby.style.width = "80px";
+// thumby.style.height = "50px";
+// thumby.width = 320;
+// thumby.height = 200;
+// thumby.style.backgroundColor = "white";
+// thumby.style.border = "1px solid black";
 
-//let frameCount = 0;
+// //let frameCount = 0;
 
-let lastFrame = -1;
-const mulDiv = thumby.width / c.width;
-function thumbLoop(time) {
-  thumby.style.top = c.offsetTop;
-  thumby.style.left = c.offsetLeft + c.offsetWidth - thumby.offsetWidth;
-  const frame = Math.floor(time / 40) % Math.min(11, maxFrame());
-  if (frame !== lastFrame) {
-    const ct = thumby.getContext("2d");
-    ct.clearRect(0, 0, ct.canvas.width, ct.canvas.height);
-    root.shapes.forEach(shape => {
-      if (shape.hidden || ((shape.anim ?? 0) !== (root.anim ?? 0))) {
-        return;
-      }
-      const ll = reshape(shape.lines[frame]);
-      if (ll) {
-        ct.fillStyle = "black";
-        ct.beginPath();
-        ct.moveTo(ll[0] * mulDiv, ll[1] * mulDiv);
-        for (let i = 2; i < ll.length; i+=2) {
-          ct.lineTo(ll[i] * mulDiv, ll[i+1] * mulDiv);
-        }
-        ct.closePath();
-        ct.fill();
-      }
-    });
-  }
-  requestAnimationFrame(thumbLoop);
-}
-requestAnimationFrame(thumbLoop);
+// let lastFrame = -1;
+// const mulDiv = thumby.width / c.width;
+// function thumbLoop(time) {
+//   thumby.style.top = c.offsetTop;
+//   thumby.style.left = c.offsetLeft + c.offsetWidth - thumby.offsetWidth;
+//   const frame = Math.floor(time / 40) % Math.min(11, maxFrame());
+//   if (frame !== lastFrame) {
+//     const ct = thumby.getContext("2d");
+//     ct.clearRect(0, 0, ct.canvas.width, ct.canvas.height);
+//     root.shapes.forEach(shape => {
+//       if (shape.hidden || ((shape.anim ?? 0) !== (root.anim ?? 0))) {
+//         return;
+//       }
+//       const ll = reshape(shape.lines[frame]);
+//       if (ll) {
+//         ct.fillStyle = "black";
+//         ct.beginPath();
+//         ct.moveTo(ll[0] * mulDiv, ll[1] * mulDiv);
+//         for (let i = 2; i < ll.length; i+=2) {
+//           ct.lineTo(ll[i] * mulDiv, ll[i+1] * mulDiv);
+//         }
+//         ct.closePath();
+//         ct.fill();
+//       }
+//     });
+//   }
+//   requestAnimationFrame(thumbLoop);
+// }
+// requestAnimationFrame(thumbLoop);
 
 
 let root = JSON.parse(localStorage.getItem("root") ?? JSON.stringify(rider));
@@ -61,6 +61,7 @@ tabs.style.flexDirection = "row";
 refreshTabs();
 
 function refreshTabs() {
+  return;
   tabs.textContent = "";
   root.animations.forEach((anim, index) => {
     const animIndex = root.anim ?? 0;
@@ -267,6 +268,7 @@ function saveWork() {
 }
 
 function onUpdatedShape() {
+  return;
   saveWork();
   shapeDiv.textContent = "";
   root.shapes.forEach((shape, shapeIndex) => {
@@ -490,6 +492,7 @@ function maxFrame() {
 
 const buttonsDiv = div.appendChild(document.createElement("div"));
 function refreshFrameButtons() {
+  return;
   buttonsDiv.textContent = "";
   for (let i = 0; i < maxFrame(); i++) {
     const button = buttonsDiv.appendChild(document.createElement("button"));
@@ -950,7 +953,7 @@ downloadURL = function(data, fileName) {
   a.click();
   a.remove();
 };
-
+/*
 const renameButton = document.body.appendChild(document.createElement("button"));
 renameButton.style.position = "absolute";
 renameButton.style.right = "10px";
@@ -973,7 +976,7 @@ downloadButton.addEventListener("click", () => {
   console.log(data);
 });
 
-
+*/
 
 function load_binary_resource(url) {
   var byteArray = [];
@@ -987,7 +990,7 @@ function load_binary_resource(url) {
   }
   return byteArray;
 }
-
+/*
 const importButton = document.body.appendChild(document.createElement("button"));
 importButton.style.position = "absolute";
 importButton.style.right = "10px";
@@ -1019,6 +1022,7 @@ previewButton.textContent = "preview";
 previewButton.addEventListener("click", () => {
   window.open("game.html");
 });
+*/
 // // function compress(shapes) {
 // //   const series = [];
 // //   const current = [0, 0];
