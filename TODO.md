@@ -10,6 +10,9 @@
 - [ ] Show cutscene finding Börte
 - [ ] Draw and implement Börte on horse following Khan
 - [ ] Add 3 bosses. Change to "fur-elise" music on boss fights.
+- [ ] Increase enemy difficulties after each boss.
+- [ ] Introduce "eagle" enemy.
+- [ ] Introduce axe thrower enemy.
 - [ ] Have Börte fight final boss.
 - [ ] Create game mode selection
   - [ ] survival mode
