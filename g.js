@@ -19,6 +19,7 @@ document.addEventListener("keydown", (e) => {
 const accumulator = [];
 
 const sh = [0,0];
+let locked = true;
 
 
 // const upgrades = {
@@ -206,6 +207,7 @@ function exitHut(hut) {
     hero.dy = 0;
     hutInfo(inHut).closed = true;
     inHut = null;
+    locked = false;
 }
 
 const sprite = {
@@ -240,6 +242,10 @@ const sprite = {
 
 
     processMovement(sprite);
+    if (locked) {
+      sprite.x = Math.max(-canvas.width / 2, Math.min(sprite.x, canvas.width / 2));
+      sprite.y = Math.max(-canvas.height / 2, Math.min(sprite.y, canvas.height / 2));
+    }
 
     const shooting = evaluate(sprite.shooting, sprite);
     if (!shooting) {
@@ -459,21 +465,23 @@ function display(s) {
       const tag = `${animation}-${frame}-${color}-${dir}-${width}-${height}`;
 
   
-
+      let canvas;
       if (!cacheBox[tag]) {
 //        console.log(tag);
+        canvas = document.createElement("canvas");
         cacheBox[tag] = {
-          canvas: document.createElement("canvas"),
+          canvas,
         };
-        cacheBox[tag].canvas.width = width;
-        cacheBox[tag].canvas.height = height;
-        cacheBox[tag].canvas.getContext("2d").lineWidth = 6;
-        cacheBox[tag].canvas.getContext("2d").strokeStyle = "black";
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").lineWidth = 6;
+        canvas.getContext("2d").strokeStyle = "black";
 // /       document.body.appendChild(cacheBox[tag].canvas);
 
-        showFrame(cacheBox[tag].canvas.getContext("2d"), dir < 0 ? width : 0, height < 0 ? -height : 0, width * dir, height, frame, anim, color, 0, 0);
+        showFrame(canvas.getContext("2d"), dir < 0 ? width : 0, height < 0 ? -height : 0, width * dir, height, frame, anim, color, 0, 0);
       }
-      ctx.drawImage(cacheBox[tag].canvas, x - hotspot[0] * width - sh[0], y - (height < 0 ? 0 : hotspot[1] * height) - sh[1] +shake);
+      canvas = cacheBox[tag].canvas;
+      ctx.drawImage(canvas, x - hotspot[0] * width - sh[0], y - (height < 0 ? 0 : hotspot[1] * height) - sh[1] +shake);
       return;
     }
   
@@ -859,9 +867,14 @@ function loop(time) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fill();
   } else if (!inHut) {
-    headStart += ((hero.dx * hero.archerOrientation < 0 ? 0 : hero.dx) / 2 + hero.archerOrientation * 2 - headStart) * .05;
-    sh[0] += hero.dt / 20 * (hero.x - canvas.width/2 - sh[0] + headStart * 80) * .1;
-    sh[1] += hero.dt / 20 * (hero.y - canvas.height/2 - sh[1] + hero.dy * 50) * .1;
+    if (!locked) {
+      headStart += ((hero.dx * hero.archerOrientation < 0 ? 0 : hero.dx) / 2 + hero.archerOrientation * 2 - headStart) * .05;
+      sh[0] += hero.dt / 20 * (hero.x - canvas.width/2 - sh[0] + headStart * 80) * .1;
+      sh[1] += hero.dt / 20 * (hero.y - canvas.height/2 - sh[1] + hero.dy * 50) * .1;  
+    } else {
+      sh[0] =- canvas.width/2;
+      sh[1] = -canvas.height/2;  
+    }
   } else {
       const hutTime = Math.min(1, (time - inHut.enteredHut) / 500);
       ctx.fillStyle = `rgb(0,0,0,${hutTime})`;
