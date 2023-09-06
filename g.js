@@ -260,7 +260,7 @@ const sprite = {
   shootPeriod: 300,
   archerOrientation: 1,
   orientation: 1,
-  direction: undefined,
+  // direction: undefined,
   brake: .99,
   // speed: .1,
   // speed: .06,
@@ -277,18 +277,18 @@ const sprite = {
   dy: 0,
   width: 250 * zoom,
   height: 200 * zoom,
-  hotspot: undefined,
+  // hotspot: undefined,
   born: 0,
-  animation: undefined,
-  range: undefined,
-  color: undefined,
+  // animation: undefined,
+  // range: undefined,
+  // color: undefined,
   horseFrame: 0,
   random: 0,
   riderAnimation: "archer",
   layer: 0,
-  hidden: false,
-  tree: false,
-  cache: false,
+  // hidden: false,
+  // tree: false,
+  // cache: false,
   sprites: [
     sprite => evaluate({
       ...sprite,
@@ -390,23 +390,23 @@ function showSprite(sprite, time, dt, accumulator) {
         const arrow = arrows[i];
         if (arrow.x - sh[0] > left && arrow.x - sh[0] < right && arrow.y - sh[1] > top && arrow.y - sh[1] < bottom) {
           const hit = superSoldier ? Math.random() < .05 : true;
-
+          const hitFoe = foes[foeIndex];
           if (hit) {
-            foes[foeIndex].dead = time;    
-            addCorpse(foes[foeIndex], time, arrow.dx, foeColor ?? color);
+            hitFoe.dead = time;    
+            addCorpse(hitFoe, time, arrow.dx, foeColor ?? color);
   
-            const gx = hero.x - foes[foeIndex].x;
-            const gy = hero.y - foes[foeIndex].y;
+            const gx = hero.x - hitFoe.x;
+            const gy = hero.y - hitFoe.y;
             const gdist = Math.sqrt(gx*gx + gy*gy);
-            foes[foeIndex].dx = 0;
-            foes[foeIndex].dy = 0;
-            foes[foeIndex].goal[0] = foes[foeIndex].x + -gx / gdist * 2000;
-            foes[foeIndex].goal[1] = foes[foeIndex].y + -gy / gdist * 2000;  
+            hitFoe.dx = 0;
+            hitFoe.dy = 0;
+            hitFoe.goal[0] = hitFoe.x + -gx / gdist * 2000;
+            hitFoe.goal[1] = hitFoe.y + -gy / gdist * 2000;  
 
-            money += (superSoldier ? 6 : 10) * (1 + .5 * upgrades.money);
+            money += (superSoldier ? 60 : 10) * (1 + .5 * upgrades.money);
             showMeTheMoney();
           } else {
-            foes[foeIndex].hitTime = time;
+            hitFoe.hitTime = time;
           }
 
           removeArrow(i);
