@@ -301,7 +301,7 @@ const sprite = {
         sprite => evaluate(sprite.moving, sprite) ? .5 - sprite.orientation * evaluate(sprite.archerOrientation, sprite) * .05 : .53,
         sprite => evaluate(sprite.moving, sprite) ? .65 + Math.sin(sprite.horseFrame * .7) / 100 : .7,
       ],
-      color: sprite => evaluate(sprite.foeColor, sprite)  ?? (sprite.corpse ? sprite.color : sprite.hill ? "#af8" : sprite.tree ? "#270" : "black"),
+      color: sprite => evaluate(sprite.foeColor, sprite)  ?? (sprite.corpse ? sprite.color : sprite.hut ? "#af8" : sprite.tree ? "#270" : "black"),
       direction: (sprite) => Math.sign(evaluate(sprite.archerOrientation, sprite)),
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
       random: 4,
@@ -312,14 +312,14 @@ const sprite = {
       y: sprite => evaluate(sprite.y, sprite),
       parent: false,
       sprites: undefined,
-      animation: sprite => sprite.hill ? "hut" : "horse",
-      range: (sprite) => sprite.hill ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
+      animation: sprite => sprite.hut ? "hut" : "horse",
+      range: (sprite) => sprite.hut ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
       hotspot: [.47, .72],
-      color: sprite => sprite.hill && hutInfo(sprite).closed ? "#ba6" : sprite.superSoldier ? "#a08" : sprite.foe ? "#004" : "#630",
+      color: sprite => sprite.hut && hutInfo(sprite).closed ? "#ba6" : sprite.superSoldier ? "#a08" : sprite.foe ? "#004" : "#630",
       direction: (sprite) => Math.sign(sprite.orientation),
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
       random: sprite => sprite.superSoldier ? 100 : 4,
-      hidden: sprite => (sprite.tree && !sprite.hill) || sprite.corpse || sprite.soldier,
+      hidden: sprite => (sprite.tree && !sprite.hut) || sprite.corpse || sprite.soldier,
     }, sprite),
     sprite => evaluate({
       ...sprite,
@@ -339,7 +339,7 @@ const sprite = {
       layer: -2,
       parent: false,
       sprites: undefined,
-      animation: sprite => sprite.soldier ? "soldier" : sprite.corpse ? "dead" : sprite.hill ? "hill" : sprite.tree ? "tree" : "horse",
+      animation: sprite => sprite.soldier ? "soldier" : sprite.corpse ? "dead" : sprite.hut ? "hut" : sprite.tree ? "tree" : "horse",
       range: (sprite) => sprite.corpse ? evaluate(sprite.rangeOverride, sprite) : sprite.tree ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
 
 //      range: sprite => sprite.rangeOverride ?? (evaluate(sprite.shooting, sprite) ? [0, 3] : [0]),
@@ -437,12 +437,12 @@ function showSprite(sprite, time, dt, accumulator) {
 const cacheBox = {};
 
 function display(s) {
-    let { x, y, width, height, animation, horseFrame, range, hotspot, color, time, hitTime, dead, direction, dy, random, hidden, cache, hero, hill } = s;
+    let { x, y, width, height, animation, horseFrame, range, hotspot, color, time, hitTime, dead, direction, dy, random, hidden, cache, hero, hut } = s;
     // if (dead) {
     //   color = "red";
     //   return;
     // }
-    if (hill && !hutInfo(s).closed) {
+    if (hut && !hutInfo(s).closed) {
       nearHut = s;
     }
     
@@ -707,16 +707,17 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
   // const angle = Math.random() * Math.PI * 2;
   // const cos = Math.cos(angle);
   // const sin = Math.sin(angle);
-  const isHill = index <= 1;
-  const repeatDistance = isHill ? 20000 : 4000;
+  const isHut = index <= 1;
+  const repeatDistance = isHut ? 20000 : 4000;
   const repeatCond = repeatDistance / 2 + 500;
   const tree = {
     ...copy(sprite),
     cache: true,
-    x: isHill ? index * repeatDistance : Math.random() * 4000 - 2000,
-    y: isHill ? index * repeatDistance / 2 : Math.random() * 4000 - 2000,
+    x: isHut ? index * repeatDistance : Math.random() * 4000 - 2000,
+    y: isHut ? index * repeatDistance / 2 : Math.random() * 4000 - 2000,
     cellX: 0,
     cellY: 0,
+    index,
     // x: cos * (2000 + Math.random()*1000),
     // y: sin * (2000 + Math.random()*1000),
     process: (sprite) => {
@@ -726,9 +727,9 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
       const hx = sprite.x - hero.x;
       const hy = sprite.y - hero.y;
       const hdist = Math.sqrt(hx * hx + hy * hy);
-      if (hdist < (isHill ? 80 : 50)) {
+      if (hdist < (isHut ? 80 : 50)) {
 //        console.log("TREE", hdist);
-        if (isHill && !hutInfo(sprite).closed) {
+        if (isHut && !hutInfo(sprite).closed) {
           if (!inHut) {
             inHut = sprite;
             sprite.enteredHut = sprite.time;
@@ -770,25 +771,42 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
       }
     },
     foe: true,
-    width: (isHill ? 600 : 500) * zoom,
-    height: (isHill ? 400 : 350 + Math.random() * 200) * zoom,
-    riderAnimation: isHill ? "hut" : "tree",
-    foeColor: isHill ? `rgb(${200}, ${100 + index * 55}, ${50 + index * 50})` : `rgb(${Math.random() * 30}, ${Math.random() * 150}, ${Math.random()*20})`,
+    width: (isHut ? 600 : 500) * zoom,
+    height: (isHut ? 400 : 350 + Math.random() * 200) * zoom,
+    riderAnimation: isHut ? "hut" : "tree",
+    foeColor: isHut ? `rgb(${200}, ${100 + index * 55}, ${50 + index * 50})` : `rgb(${Math.random() * 30}, ${Math.random() * 150}, ${Math.random()*20})`,
     tree: true,
-    hill: isHill,
-    rangeOverride: isHill ? [1] : undefined,
+    hut: isHut,
+    rangeOverride: isHut ? [1] : undefined,
   };
   return tree;
 });
 
 function hutInfo(sprite) {
-  if (!huts[`${sprite.cellX}_${sprite.cellY}`]) {
-    huts[`${sprite.cellX}_${sprite.cellY}`] = {};
-  }
-  return huts[`${sprite.cellX}_${sprite.cellY}`];
+  const tag = `${sprite.cellX}_${sprite.cellY}_${sprite.index}`;
+  return huts[tag] ?? (huts[tag] = {});
 }
 
+function distSq(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return dx * dx + dy * dy;
+}
 
+function closestHut() {
+  const huts = trees.filter(h => h.hut && !hutInfo(h).closed);
+  let best = huts[0];
+  for (let i = 1; i < huts.length; i++) {
+    if (distSq(huts[i], hero) < distSq(best, hero)) {
+      best = huts[i];
+    }
+  }
+  return best;
+}
+
+const elements = [foes, corpses, trees];
+
+let indic = null;
 
 function loop(time) {
   requestAnimationFrame(loop);
@@ -844,15 +862,7 @@ function loop(time) {
   accumulator.length = 0;
   drawGround(accumulator);
   showSprite(hero, time, dt, accumulator);
-  foes.forEach(foe => {
-    showSprite(foe, time, dt, accumulator);
-  });
-  corpses.forEach(corpse => {
-    showSprite(corpse, time, dt, accumulator);
-  });
-  trees.forEach(tree => {
-    showSprite(tree, time, dt, accumulator);
-  });
+  elements.forEach(e => e.forEach(s => showSprite(s, time, dt, accumulator)));
   accumulator.sort((a, b) => {
     if (a.layer !== b.layer) {
       return a.layer - b.layer;
@@ -861,6 +871,27 @@ function loop(time) {
   });
   nearHut = null;  //  display will find hut
   accumulator.forEach(s => display(s, time));
+
+  const ch = closestHut();
+  const chdx = ch.x - hero.x;
+  const chdy = ch.y - hero.y;
+  const chdist = Math.sqrt(chdx*chdx + chdy*chdy);
+  if (chdist > 2000) {
+    if (!indic) {
+      indic = [hero.x, hero.y];
+    }
+    ctx.beginPath();
+    const ddd = 2000;
+    const ix = hero.x  + chdx / chdist * ddd - sh[0];
+    const iy = hero.y  + chdy / chdist * ddd - sh[1];
+    indic[0] += (ix - indic[0]) * .1;
+    indic[1] += (iy - indic[1]) * .1;
+    ctx.arc(Math.min(canvas.width - 100, Math.max(100, indic[0])),
+            Math.min(canvas.height - 100, Math.max(100, indic[1])), 15, 0, 2 * Math.PI);
+    ctx.fill();  
+  }
+
+  
   if (!health) {
     const deathTime = Math.min(.7, (time - hero.dead) / 3000);
     ctx.fillStyle = `rgb(200,0,0,${deathTime})`;
