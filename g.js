@@ -36,7 +36,7 @@ const upgrades = {
   speedWhileShooting: 2,
   speed: 2,
   maxHealth: 0,//2,
-  shield: 0,
+  shield: 1,
   quickShot: 1,
   money: 2,
 };
@@ -212,14 +212,16 @@ function exitHut(hut) {
     hero.y = hut.y + 200;
     hero.dx = 0;
     hero.dy = 0;
-    hutInfo(inHut).closed = true;
+    let info = hutInfo(inHut);
+    info.closed = true;
+    info.onFire = true;
     inHut = null;
     locked = false;
 }
 
 const sprite = {
   parent: true,
-  active: true,
+  active: () => true,
   time: 0,
   nextShot: 0,
   process: (sprite) => {
@@ -317,6 +319,7 @@ const sprite = {
     }, sprite),
     sprite => evaluate({
       ...sprite,
+      process: undefined,
       y: sprite => evaluate(sprite.y, sprite),
       parent: false,
       sprites: undefined,
@@ -331,6 +334,7 @@ const sprite = {
     }, sprite),
     sprite => evaluate({
       ...sprite,
+      process: undefined,
       y: sprite => evaluate(sprite.y, sprite) + 1,
       parent: false,
       sprites: undefined,
@@ -339,11 +343,12 @@ const sprite = {
       hotspot: [.47, .72],
       color: () => upgrades.shield > 1 ? "gold" : "#69f",
       direction: (sprite) => Math.sign(sprite.orientation),
-      frame: (sprite) => 0,
+      frame: () => 0,
       hidden: sprite => sprite.foe || sprite.corpse || sprite.soldier || !upgrades.shield,
     }, sprite),
     sprite => evaluate({
       ...sprite,
+      process: undefined,
       layer: -2,
       parent: false,
       sprites: undefined,
@@ -359,6 +364,25 @@ const sprite = {
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
       hidden: sprite => sprite.dead && sprite.soldier,
     }, sprite),
+    ...new Array(5).fill(
+      sprite => evaluate({
+        ...sprite,
+        process: undefined,
+        cache: false,
+        parent: false,
+        sprites: undefined,
+        animation: "shield",
+        random: 150,
+        range: [0],
+        hotspot: [.47 + Math.random() - .5, 5],
+        width: 200,
+        height: 30,
+        color: () => Math.random() < .5 ? "gold" : "red",
+        direction: (sprite) => Math.sign(sprite.orientation),
+        frame: () => 0,
+        active: sprite => sprite.hut && hutInfo(sprite).onFire,
+      }, sprite)
+    ),
   ],
 };
 
