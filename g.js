@@ -182,29 +182,36 @@ function shootArrow(sprite) {
   arrowSize++;
 }
 
+function repeatDt(callback, subject) {
+  const loops = Math.min(6, Math.max(dt / 8, 1));
+  for (let ti = 0; ti < loops; ti++) {
+    callback(subject);
+  }
+}
+
 function processMovement(sprite) {
-    const dtt = sprite.dt / 20;
-    const ax = evaluate(sprite.ax, sprite);
-    const ay = evaluate(sprite.ay, sprite);
-    const da = Math.sqrt(ax*ax + ay * ay);
-    if (ax !== 0) {
-      sprite.orientation = ax;
-    }
-    const speed = evaluate(sprite.speed, sprite) * (sprite.dead ? 2 : 1) * (sprite.superSoldier && sprite.soldier ? .7 : 1);
-    const brake = sprite.brake;
-    if (da) {
-      sprite.dx = (sprite.dx + ax / da * speed) * brake;
-      sprite.dy = (sprite.dy + ay / da * speed / 2) * brake;
-    } else {
-      sprite.dx = sprite.dx * brake;
-      sprite.dy = sprite.dy * brake;      
-    }
-    if (evaluate(sprite.moving, sprite)) {
-      sprite.x += sprite.dx * dtt;
-      sprite.y += sprite.dy * dtt;
-    }
-    const dist = Math.sqrt(sprite.dx * sprite.dx + sprite.dy * sprite.dy);
-    sprite.horseFrame += dtt * Math.max(.08, dist / 50);
+  const dtt = 0.7;
+  const ax = evaluate(sprite.ax, sprite);
+  const ay = evaluate(sprite.ay, sprite);
+  const da = Math.sqrt(ax*ax + ay * ay);
+  if (ax !== 0) {
+    sprite.orientation = ax;
+  }
+  const speed = evaluate(sprite.speed, sprite) * (sprite.dead ? 2 : 1) * (sprite.superSoldier && sprite.soldier ? .7 : 1);
+  const brake = sprite.brake;
+  if (da) {
+    sprite.dx = (sprite.dx + ax / da * speed) * brake;
+    sprite.dy = (sprite.dy + ay / da * speed / 2) * brake;
+  } else {
+    sprite.dx = sprite.dx * brake;
+    sprite.dy = sprite.dy * brake;      
+  }
+  if (evaluate(sprite.moving, sprite)) {
+    sprite.x += sprite.dx * dtt;
+    sprite.y += sprite.dy * dtt;
+  }
+  const dist = Math.sqrt(sprite.dx * sprite.dx + sprite.dy * sprite.dy);
+  sprite.horseFrame += dtt * Math.max(.08, dist / 50);
 }
 
 function exitHut(hut) {
@@ -250,8 +257,7 @@ const sprite = {
       return;
     }
 
-
-    processMovement(sprite);
+    repeatDt(processMovement, sprite);
     if (locked) {
       sprite.x = Math.max(-canvas.width / 2, Math.min(sprite.x, canvas.width / 2));
       sprite.y = Math.max(-canvas.height / 2, Math.min(sprite.y, canvas.height / 2));
@@ -402,7 +408,6 @@ function evaluate(value, sprite) {
 }
 
 function showSprite(sprite, time, dt, accumulator) {
-  sprite.dt = dt;
   sprite.time = time;
   const sprites = evaluate(sprite.sprites, sprite);
   sprites.forEach(sprite => {
@@ -524,8 +529,8 @@ function display(s) {
       width * dir, height, frame, anim, color, ddy, random);
 }
 
-const fps = 60;
-const period = 1000 / fps;
+//const fps = 60;
+//const period = 1000 / fps;
 let lastframeTime = 0;
 
 let headStart = 0;
@@ -577,7 +582,7 @@ function addCorpse(foe, time, dx, color) {
       const endFrame = evaluate(sprite.rangeOverride[1], sprite);
       sprite.horseFrame = Math.min(frame, endFrame);
       if (sprite.horseFrame < endFrame) {
-        sprite.x += dx * sprite.dt / 1000;
+        sprite.x += dx * dt / 1000;
       }
     },
     width: foe.width,
@@ -643,7 +648,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
 
         sprite.speed = sprite.soldier ? Math.max(.025, Math.random() / 30) : Math.max(.03, Math.random() / 20);
       }
-      processMovement(sprite);
+      repeatDt(processMovement, sprite);
       const gx = sprite.x - sprite.goal[0];
       const gy = sprite.y - sprite.goal[1];
       sprite.gdist = Math.sqrt(gx * gx + gy * gy);
@@ -853,14 +858,20 @@ const elements = [[hero], foes, corpses, trees];
 
 let indic = null;
 
+//let toggle = 0;
+let dt;
 function loop(time) {
   requestAnimationFrame(loop);
-  if (time - lastframeTime <= period || !hasFocus) {
+  // toggle = (toggle + 1) % 3;
+  // if (toggle) {
+  //   return;
+  // }
+  if (!hasFocus) {
     return;
   }
   lastframeTime = Math.max(lastframeTime, time - 100);
-  const dt = time - lastframeTime;
-  const dtt = dt / 20;
+  dt = time - lastframeTime;
+//  console.log(dt);
   lastframeTime = time;
 
 
@@ -874,22 +885,23 @@ function loop(time) {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  repeatDt(moveArrows, arrows);
+
+
   ctx.beginPath();
   ctx.strokeStyle = "#038";
   ctx.lineWidth = 6;
+  const arrdt = .7;
   for (let i = 0; i < arrowSize; i++) {
     const arrow = arrows[i];
-    const arrowSize = 50;
+    const arrowlen = 50;
     const dist = Math.sqrt(arrow.dx * arrow.dx + arrow.dy * arrow.dy) + 1;
     ctx.moveTo(
       arrow.x - sh[0],
       arrow.y - sh[1] + shake);
     ctx.lineTo(
-      arrow.x - sh[0] - arrow.dx / dist * arrowSize,
-      arrow.y - sh[1] + shake - arrow.dy / dist * arrowSize);
-    arrow.dy += .3;
-    arrow.x += arrow.dx / dist * arrowSize * dtt;
-    arrow.y += arrow.dy / dist * arrowSize * dtt;
+      arrow.x - sh[0] - arrow.dx / dist * arrowlen,
+      arrow.y - sh[1] + shake - arrow.dy / dist * arrowlen);
   }
   ctx.stroke();
 
@@ -946,8 +958,8 @@ function loop(time) {
   } else if (!inHut) {
     if (!locked) {
       headStart += ((hero.dx * hero.archerOrientation < 0 ? 0 : hero.dx) / 2 + hero.archerOrientation * 2 - headStart) * .05;
-      sh[0] += hero.dt / 20 * (hero.x - canvas.width/2 - sh[0] + headStart * 80) * .1;
-      sh[1] += hero.dt / 20 * (hero.y - canvas.height/2 - sh[1] + hero.dy * 50) * .1;  
+      sh[0] += dt / 20 * (hero.x - canvas.width/2 - sh[0] + headStart * 80) * .1;
+      sh[1] += dt / 20 * (hero.y - canvas.height/2 - sh[1] + hero.dy * 50) * .1;  
     } else {
       sh[0] =- canvas.width/2;
       sh[1] = -canvas.height/2;  
@@ -959,6 +971,18 @@ function loop(time) {
       ctx.fill();
       // showSprite(borte, time, dt, accumulator);
       // accumulator.forEach(s => display(s, time));
+    }
+}
+
+function moveArrows(arrows) {
+  const arrdt = .4;
+  const arrowlen = 50;
+  for (let i = 0; i < arrowSize; i++) {
+    const arrow = arrows[i];
+    const dist = Math.sqrt(arrow.dx * arrow.dx + arrow.dy * arrow.dy) + 1;
+    arrow.dy += .3;
+    arrow.x += arrow.dx / dist * arrowlen * arrdt;
+    arrow.y += arrow.dy / dist * arrowlen * arrdt;
     }
 }
 
