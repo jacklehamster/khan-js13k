@@ -32,15 +32,22 @@ let locked = true;
 // };
 
 const upgrades = {
+  bow: 0,
   speedWhileShooting: 2,
   speed: 2,
-  maxHealth: 2,
+  maxHealth: 0,//2,
   shield: 0,
   quickShot: 1,
   money: 2,
 };
 
-
+const hutUpgrades = [
+  0,
+  () => {
+    upgrades.bow++;
+    foesTotal = 20;
+  },
+];
 
 const defaultmaxHealth = 6;
 
@@ -212,6 +219,7 @@ function exitHut(hut) {
 
 const sprite = {
   parent: true,
+  active: true,
   time: 0,
   nextShot: 0,
   process: (sprite) => {
@@ -250,7 +258,7 @@ const sprite = {
     const shooting = evaluate(sprite.shooting, sprite);
     if (!shooting) {
       sprite.archerOrientation = sprite.orientation;
-    } else {
+    } else if (upgrades.bow) {
       if (sprite.time > sprite.nextShot) {
         shootArrow(sprite);
         sprite.nextShot = sprite.time + evaluate(sprite.shootPeriod, sprite);
@@ -374,8 +382,8 @@ function showSprite(sprite, time, dt, accumulator) {
   sprite.time = time;
   const sprites = evaluate(sprite.sprites, sprite);
   sprites.forEach(sprite => {
-    const { x, y, width, height, hotspot, foeIndex, dead, color, foeColor, superSoldier, hidden, tree } = sprite;
-    if (hidden || (inHut && !tree)) {
+    const { x, y, width, height, hotspot, foeIndex, dead, color, foeColor, superSoldier, hidden, tree, active } = sprite;
+    if (!active || hidden || (inHut && !tree)) {
       return;
     }
     const left = x - hotspot[0] * width - sh[0];
@@ -403,7 +411,7 @@ function showSprite(sprite, time, dt, accumulator) {
             hitFoe.goal[0] = hitFoe.x + -gx / gdist * 2000;
             hitFoe.goal[1] = hitFoe.y + -gy / gdist * 2000;  
 
-            money += (superSoldier ? 60 : 10) * (1 + .5 * upgrades.money);
+            money += (superSoldier ? 100 : 10) * (1 + .5 * upgrades.money);
             showMeTheMoney();
           } else {
             hitFoe.hitTime = time;
@@ -561,7 +569,8 @@ function addCorpse(foe, time, dx, color) {
 let hitCount = 0;
 
 //  EASY vvvv
-//const foesLength = 10;
+let foesTotal = 0;
+// const foesLength = 20;
 //  HARD vvvv
 const foesLength = 100;
 const foes = new Array(foesLength).fill(0).map((_, index) => {
@@ -579,6 +588,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
   const y = sin * (2000 + Math.random()*1000);
   const foe = {
     ...copy(sprite),
+    active: () => index <= foesTotal,
     superSoldier,
     foeIndex: index,
     foeColor: superSoldier ? (soldier ? "blue" : "#a00") : soldier ? "#75f" : "#f0a",
@@ -601,7 +611,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
     cache: true,
     soldier,
     process: (sprite) => {
-      if (!sprite.parent) {
+      if (!sprite.parent || !evaluate(sprite.active, sprite)) {
         return;
       }
       if (sprite.dead && sprite.time - sprite.dead > 5000) {
@@ -702,7 +712,8 @@ let inHut = null;
 
 const huts = {};
 
-const treeCount = 30;//200;
+// const treeCount = 200; //  DENSE
+const treeCount = 30;
 const trees = new Array(treeCount).fill(0).map((_, index) => {
   // const angle = Math.random() * Math.PI * 2;
   // const cos = Math.cos(angle);
@@ -713,15 +724,15 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
   const tree = {
     ...copy(sprite),
     cache: true,
-    x: isHut ? index * repeatDistance : Math.random() * 4000 - 2000,
-    y: isHut ? index * repeatDistance / 2 : Math.random() * 4000 - 2000,
+    x: isHut ? index * repeatDistance : 1000 + Math.random() * 4000,
+    y: isHut ? index * repeatDistance / 2 : Math.random() * 4000,
     cellX: 0,
     cellY: 0,
     index,
     // x: cos * (2000 + Math.random()*1000),
     // y: sin * (2000 + Math.random()*1000),
     process: (sprite) => {
-      if (!sprite.parent) {
+      if (!sprite.parent || !evaluate(sprite.active, sprite)) {
         return;
       }
       const hx = sprite.x - hero.x;
@@ -733,6 +744,13 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
           if (!inHut) {
             inHut = sprite;
             sprite.enteredHut = sprite.time;
+
+            if (!hutInfo(inHut).level) {
+              hutInfo(inHut).level = hutLevel++;
+              hutUpgrades[hutLevel]?.();
+            }
+          
+
             health = defaultmaxHealth + upgrades.maxHealth * 2;
             showHealth();
             showGameOver();
@@ -782,6 +800,9 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
   return tree;
 });
 
+//let borte = {...sprite, sprites: [], animation: "borte", color: "white"};
+
+let hutLevel = 0;
 function hutInfo(sprite) {
   const tag = `${sprite.cellX}_${sprite.cellY}_${sprite.index}`;
   return huts[tag] ?? (huts[tag] = {});
@@ -804,7 +825,7 @@ function closestHut() {
   return best;
 }
 
-const elements = [foes, corpses, trees];
+const elements = [[hero], foes, corpses, trees];
 
 let indic = null;
 
@@ -861,7 +882,6 @@ function loop(time) {
 
   accumulator.length = 0;
   drawGround(accumulator);
-  showSprite(hero, time, dt, accumulator);
   elements.forEach(e => e.forEach(s => showSprite(s, time, dt, accumulator)));
   accumulator.sort((a, b) => {
     if (a.layer !== b.layer) {
@@ -873,22 +893,24 @@ function loop(time) {
   accumulator.forEach(s => display(s, time));
 
   const ch = closestHut();
-  const chdx = ch.x - hero.x;
-  const chdy = ch.y - hero.y;
-  const chdist = Math.sqrt(chdx*chdx + chdy*chdy);
-  if (chdist > 2000) {
-    if (!indic) {
-      indic = [hero.x, hero.y];
-    }
-    ctx.beginPath();
-    const ddd = 2000;
-    const ix = hero.x  + chdx / chdist * ddd - sh[0];
-    const iy = hero.y  + chdy / chdist * ddd - sh[1];
-    indic[0] += (ix - indic[0]) * .1;
-    indic[1] += (iy - indic[1]) * .1;
-    ctx.arc(Math.min(canvas.width - 100, Math.max(100, indic[0])),
-            Math.min(canvas.height - 100, Math.max(100, indic[1])), 15, 0, 2 * Math.PI);
-    ctx.fill();  
+  if (ch) {
+    const chdx = ch.x - hero.x;
+    const chdy = ch.y - hero.y;
+    const chdist = Math.sqrt(chdx*chdx + chdy*chdy);
+    if (chdist > 2000) {
+      if (!indic) {
+        indic = [hero.x, hero.y];
+      }
+      ctx.beginPath();
+      const ddd = 2000;
+      const ix = hero.x  + chdx / chdist * ddd - sh[0];
+      const iy = hero.y  + chdy / chdist * ddd - sh[1];
+      indic[0] += (ix - indic[0]) * .1;
+      indic[1] += (iy - indic[1]) * .1;
+      ctx.arc(Math.min(canvas.width - 80, Math.max(80, indic[0])),
+              Math.min(canvas.height - 80, Math.max(80, indic[1])), 15, 0, 2 * Math.PI);
+      ctx.fill();  
+    }  
   }
 
   
@@ -911,7 +933,9 @@ function loop(time) {
       ctx.fillStyle = `rgb(0,0,0,${hutTime})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fill();
-  }
+      // showSprite(borte, time, dt, accumulator);
+      // accumulator.forEach(s => display(s, time));
+    }
 }
 
 

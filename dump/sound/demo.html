@@ -9,6 +9,7 @@ body {
 }
   </style>
   <script type="text/javascript" src="../../sound/wild-horde.js"></script>
+  <script type="text/javascript" src="../../sound/fur-elise.js"></script>
   <script type="text/javascript" src="soundbox.js"></script>
   <!-- <script type="text/javascript" src="third_party/Blob.js"></script> -->
   <script type="text/javascript">
@@ -27,7 +28,8 @@ var song={songData:[{i:[2,192,128,0,2,192,128,3,0,0,32,222,60,0,0,0,2,188,3,1,3,
   // Initialize music generation (player).
   var t0 = new Date();
   var player = new CPlayer();
-  player.init(wildHorde);
+   player.init(wildHorde);
+//  player.init(furElise);
 
   // Generate music...
   var done = false;

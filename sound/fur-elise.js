@@ -5,7 +5,7 @@
     // use it in a demo.
 
     // Song data
-    var song = {
+    var furElise = {
       songData: [
         { // Instrument 0
           i: [

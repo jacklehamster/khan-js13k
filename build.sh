@@ -18,4 +18,4 @@ cp rider.13k release
 # cp sound/wild-horde.sbox release
 zip -vr game.zip release/ -x "*.DS_Store"
 echo "=================================="
-ls -lh game.zip
+wc -c  game.zip
