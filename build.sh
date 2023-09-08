@@ -11,8 +11,9 @@ rm -rf game.zip
 # npx roadroller sound/soundbox.js -o temp/rrs.js
 # uglifyjs --mangle toplevel temp/rrg.js temp/rrd.js temp/rrs.js -o release/gg.js
 
-uglifyjs --mangle toplevel g.js decode.js sound/soundbox.js sound/wild-horde.js sound/fur-elise.js -o release/gg.js
-cp play.html release
+uglifyjs --mangle toplevel decode.js sound/soundbox.js sound/wild-horde.js sound/fur-elise.js sound/song.js g.js -o release/gg.js
+cp play.html release/index.html
+cp game.css release
 cp rider.13k release
 # cp sound/fur-elise.sbox release
 # cp sound/wild-horde.sbox release

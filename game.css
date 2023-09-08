@@ -1,0 +1,13 @@
+body {
+    color: silver;
+    background-color: black;
+}
+canvas {
+    margin: auto;
+}
+.gameview {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

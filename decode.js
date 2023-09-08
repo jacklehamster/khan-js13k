@@ -80,9 +80,12 @@ function decodeAnimations(result) {
 function decodeShape(reduced) {
   const result = expand(reduced);
   const root = {};
+  console.log(result);
   result.reverse();
-  const precision = result.pop();;
+  const precision = result.pop();
   root.animations = decodeAnimations(result);
+  console.log(result.reverse());
+  result.reverse();
   root.shapes = decodeShapes(result, precision);
   return root;
 }

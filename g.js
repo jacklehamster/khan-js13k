@@ -21,6 +21,8 @@ const accumulator = [];
 const sh = [0,0];
 let locked = true;
 
+const wildHordeMusic = new Song(wildHorde);
+
 
 // const upgrades = {
 //   speedWhileShooting: 0,
@@ -33,21 +35,80 @@ let locked = true;
 
 const upgrades = {
   bow: 0,
-  speedWhileShooting: 2,
-  speed: 2,
-  maxHealth: 0,//2,
-  shield: 1,
+  speedWhileShooting: 1,
+  speed: 1, //  max 3
+  maxHealth: 0, //  max 3
+  shield: 0,
   quickShot: 1,
-  money: 2,
+  money: 0,
+  rickoShot: 0, //  max 3
 };
 
 const hutUpgrades = [
-  0,
+  () => {},
   () => {
     upgrades.bow++;
     foesTotal = 20;
+    
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    
+    // for (hutLevel++;hutLevel < hutUpgrades.length; hutLevel++) {
+    //     hutUpgrades[hutLevel]?.();
+    // }
+    // hutLevel = hutUpgrades.length - 1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 40;
+    soldierSuperSpeed += .2;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 60;
+    soldierSuperSpeed += .1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 80;
+    soldierSuperSpeed += .1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 100;
+    soldierSuperSpeed += .1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\n NOTE: This is the right level for story mode ending.`;
+    foesTotal = 150;
+    soldierSuperSpeed += .1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 200;
+    soldierSuperSpeed += .1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 300;
+    soldierSuperSpeed += .1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 400;
+    soldierSuperSpeed += .1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 400;
+    soldierSuperSpeed += .1;
+  },
+  () => {
+    foesTotal = 400;
+    gameOverDiv.textContent = `Level ${hutLevel}\nYou've reached the last supported level.`;
+    soldierSuperSpeed += .5;
   },
 ];
+let soldierSuperSpeed = .7;
 
 const defaultmaxHealth = 6;
 
@@ -55,8 +116,8 @@ let health = defaultmaxHealth;
 
 const healthDiv = document.body.appendChild(document.createElement("div"));
 healthDiv.style.position = "absolute";
-healthDiv.style.top = "10px";
-healthDiv.style.left = "10px";
+healthDiv.style.top = canvas.offsetTop;
+healthDiv.style.left = canvas.offsetLeft + 3;
 function showHealth() {
   const maxHealth = defaultmaxHealth + upgrades.maxHealth * 2;
   let str = "";
@@ -75,8 +136,10 @@ function showHealth() {
 let money = 0;
 const moneyDiv = document.body.appendChild(document.createElement("div"));
 moneyDiv.style.position = "absolute";
-moneyDiv.style.top = "30px";
-moneyDiv.style.left = "10px";
+moneyDiv.style.top = canvas.offsetTop + 25;
+moneyDiv.style.left = canvas.offsetLeft;
+moneyDiv.style.color = "#990";
+moneyDiv.style
 function showMeTheMoney() {
   moneyDiv.textContent = !money ? "" : `⭐ ${money}`;
 }
@@ -84,12 +147,13 @@ function showMeTheMoney() {
 
 const gameOverDiv = document.body.appendChild(document.createElement("div"));
 gameOverDiv.style.position = "absolute";
-gameOverDiv.style.top = "50px";
-gameOverDiv.style.left = "10px";
+gameOverDiv.style.top = canvas.offsetTop + 50;
+gameOverDiv.style.left = canvas.offsetLeft + 10;
 gameOverDiv.style.color = "snow";
 gameOverDiv.textContent = "Press ESC to continue";
 gameOverDiv.style.display = "none";
 function showGameOver() {
+  wildHordeMusic.stop();
   gameOverDiv.style.display = "";
 }
 
@@ -150,9 +214,9 @@ function showFrame(ctx, x, y, w, h, frame, anim, color, ddy, random, debug) {
 
 function moveTo(ctx, offsetX, offsetY, x, y, penDown, w, h, ddy, random) {
   if (penDown) {
-      ctx.lineTo(offsetX + x, offsetY + y + (x/w - .5)*15 * ddy + random * (Math.random() - .5));
+      ctx.lineTo(offsetX + x, offsetY + y + (x/w - .5)*10 * ddy + random * (Math.random() - .5));
   } else {
-      ctx.moveTo(offsetX + x, offsetY + y + (x/w - .5)*15 * ddy + random * (Math.random() - .5));
+      ctx.moveTo(offsetX + x, offsetY + y + (x/w - .5)*10 * ddy + random * (Math.random() - .5));
   }
 }
 
@@ -165,6 +229,10 @@ function removeArrow(index) {
   arrows[index].dy = arrows[arrowSize - 1].dy;
   arrows[index].born = arrows[arrowSize - 1].born;
   arrowSize--;
+}
+
+function hasShield(hero) {
+  return upgrades.shield && hero.time - (hero.lastBlock??-20000) > (upgrades.shield === 2 ? 10000 : 20000);
 }
 
 let arrowSize = 0;
@@ -214,6 +282,7 @@ function processMovement(sprite) {
   sprite.horseFrame += dtt * Math.max(.08, dist / 50);
 }
 
+let onExit = null;
 function exitHut(hut) {
     hero.x = hut.x;
     hero.y = hut.y + 200;
@@ -224,6 +293,8 @@ function exitHut(hut) {
     info.onFire = true;
     inHut = null;
     locked = false;
+    onExit?.();
+    onExit = null;
 }
 
 const sprite = {
@@ -239,6 +310,7 @@ const sprite = {
       if (keys.Escape) {
         exitHut(inHut);
         gameOverDiv.style.display = "none";
+        wildHordeMusic.play();
       } else {
         return;
       }
@@ -251,6 +323,7 @@ const sprite = {
         gameOverDiv.style.display = "none";
         showMeTheMoney();
         showHealth();
+        wildHordeMusic.play();
       }
     }
     if (!health && sprite.hero) {
@@ -281,9 +354,8 @@ const sprite = {
   // speed: .1,
   // speed: .06,
   // speed: .05,
-  speed: sprite => evaluate(sprite.shooting, sprite) ?
-    0.03 + upgrades.speedWhileShooting * 0.02 :
-    .05 + upgrades.speed * 0.03,
+  speed: sprite => (.08 + upgrades.speed * 0.03) * (evaluate(sprite.shooting, sprite) && !upgrades.speedWhileShooting ?
+    0.5 : 1),
   x: 300, y: 500,
   moving: sprite => Math.abs(sprite.dx) > threshold || Math.abs(sprite.dy) > threshold,
   shooting: () => keys.Space,
@@ -347,10 +419,10 @@ const sprite = {
       animation: "shield",
       range: [0],
       hotspot: [.47, .72],
-      color: () => upgrades.shield > 1 ? "gold" : "#69f",
+      color: sprite => hasShield(sprite) && upgrades.shield > 1 ? "gold" : "#69f",
       direction: (sprite) => Math.sign(sprite.orientation),
       frame: () => 0,
-      hidden: sprite => sprite.foe || sprite.corpse || sprite.soldier || !upgrades.shield,
+      hidden: sprite => !hasShield(sprite) || sprite.foe || sprite.corpse || sprite.soldier,
     }, sprite),
     sprite => evaluate({
       ...sprite,
@@ -446,7 +518,12 @@ function showSprite(sprite, time, dt, accumulator) {
             hitFoe.hitTime = time;
           }
 
-          removeArrow(i);
+          if (Math.random() < upgrades.rickoShot * .3) {
+            arrow.dx *= (Math.random() - .5);
+            arrow.dy = - Math.abs(arrow.dy)* .8;
+          } else {
+            removeArrow(i);
+          }
           if (upgrades.quickShot) {
             hero.nextShot = time + 50;
           }
@@ -595,19 +672,18 @@ function addCorpse(foe, time, dx, color) {
   return corpse;
 }
 
-let hitCount = 0;
 
 //  EASY vvvv
 let foesTotal = 0;
 // const foesLength = 20;
 //  HARD vvvv
-const foesLength = 100;
+const foesLength = 400;
 const foes = new Array(foesLength).fill(0).map((_, index) => {
   const angle = Math.random() * Math.PI * 2;
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
 
-  const superSoldier = index / foesLength < .05;
+  const superSoldier = index % 20 === 0;
   const soldier = index % 3 <= 1;
   // if (superSoldier) {
   //   console.log(superSoldier, soldier);    
@@ -615,6 +691,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
 
   const x = cos * (2000 + Math.random()*1000);
   const y = sin * (2000 + Math.random()*1000);
+  const mySpeed = soldier ? Math.max(.01, Math.random() / 20) : Math.max(.03, Math.random() / 10);//soldierSuperSpeed
   const foe = {
     ...copy(sprite),
     active: () => index <= foesTotal,
@@ -631,7 +708,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
     rangeOverride: sprite => !evaluate(sprite.moving, sprite) ? [0] : soldier ? [0, 4] : [0, 3],
     // speed: Math.max(.03, Math.random() / 15),//sprite => 10 / (evaluate(sprite.gdist, sprite) + 1),
     //  HARD vvv
-    speed: soldier ? Math.max(.01, Math.random() / 30) : Math.max(.03, Math.random() / 20),
+    speed: () => mySpeed * soldierSuperSpeed,
     //  MEDIUM vvv
     // speed: soldier ? Math.max(.01, Math.random() / 40) : Math.max(.02, Math.random() / 30),
     //  EASY vvv
@@ -657,12 +734,14 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
       const hy = sprite.y - hero.y;
       const hdist = Math.sqrt(hx * hx + hy * hy);
       if (hdist < 50 && !sprite.dead && health) {
-        hitCount+= sprite.superSoldier ? 5 : 1;
-        console.log("HIT", hitCount, (hero.time - hero.born) / 1000 + "s");
-        health = Math.max(0, health - (superSoldier ? 2 : 1));
-        showHealth();
+        if (hasShield(hero)) {
+          hero.lastBlock = hero.time;
+        } else {
+          cs.backgroundColor = "#a00";
+          health = Math.max(0, health - (superSoldier ? 2 : 1));
+          showHealth();
+        }
         shakeSize = 40;
-        cs.backgroundColor = "#a00";
         setTimeout(() => {
           cs.backgroundColor = "#efd";
         }, 150);
@@ -671,6 +750,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
           addCorpse(hero, hero.time, (hero.x - sprite.x) * 2, hero.color);
           hero.dead = hero.time;
           showGameOver();
+          wildHordeMusic.stop();
         }
 
         const angle = Math.random() * Math.PI * 2;
@@ -741,8 +821,8 @@ let inHut = null;
 
 const huts = {};
 
-// const treeCount = 200; //  DENSE
-const treeCount = 30;
+const treeCount = 200; //  DENSE
+// const treeCount = 30;
 const trees = new Array(treeCount).fill(0).map((_, index) => {
   // const angle = Math.random() * Math.PI * 2;
   // const cos = Math.cos(angle);
@@ -776,7 +856,7 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
 
             if (!hutInfo(inHut).level) {
               hutInfo(inHut).level = hutLevel++;
-              hutUpgrades[hutLevel]?.();
+              onExit = hutUpgrades[Math.min(hutLevel, hutUpgrades.length - 1)]?.();
             }
           
 
@@ -957,7 +1037,8 @@ function loop(time) {
     ctx.fill();
   } else if (!inHut) {
     if (!locked) {
-      headStart += ((hero.dx * hero.archerOrientation < 0 ? 0 : hero.dx) / 2 + hero.archerOrientation * 2 - headStart) * .05;
+      headStart += ((hero.dx * hero.archerOrientation < 0 ? 0 : hero.dx) / 2 + hero.archerOrientation - headStart) * .05;
+      const dt = 20;
       sh[0] += dt / 20 * (hero.x - canvas.width/2 - sh[0] + headStart * 80) * .1;
       sh[1] += dt / 20 * (hero.y - canvas.height/2 - sh[1] + hero.dy * 50) * .1;  
     } else {
@@ -1033,3 +1114,4 @@ function drawGround() {
 
 showHealth();
 showMeTheMoney();
+
