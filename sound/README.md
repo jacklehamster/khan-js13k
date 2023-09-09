@@ -1,5 +1,13 @@
-# To play a song:
+# Setup
 
+```
+    <script src=sound/fur-elise.js></script>
+    <script src=sound/wild-horde.js></script>
+    <script src=sound/soundbox.js></script>
+    <script src=sound/song.js></script>
+```
+
+# To play a song:
 
 ## Wild Horde
 ```javascript
