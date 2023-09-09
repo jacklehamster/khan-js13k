@@ -1,0 +1,17 @@
+<html>
+    <script src=fur-elise.js></script>
+    <script src=wild-horde.js></script>
+    <script src=soundbox.js></script>
+    <script src=song.js></script>
+    <script>
+        const wildHordeSong = new Song(wildHorde);
+        const furEliseSong = new Song(furElise);
+    </script>
+
+    <body>
+        <button onclick="wildHordeSong.play();">WILD HORDE</button>
+        <button onclick="furEliseSong.play();">FUR ELISE</button>
+        <button onclick="wildHordeSong.stop(); furEliseSong.stop();">STOP</button>
+    </body>
+</html>
+
