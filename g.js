@@ -41,7 +41,7 @@ let startTime = 0;
 let upgrades = window.upgrades = {
   bow: 0, //  max 1                 [bow]
   speedWhileShooting: 0,  //  max 1 [bow]
-  speed: 1, //  max 3               
+  speed: 0, //  max 3               
   maxHealth: 0, //  max 3           
   shield: 0,  //  max 2             
   quickShot: 0, //  max 1           [bow]
@@ -50,7 +50,7 @@ let upgrades = window.upgrades = {
   giantPiercing: 0, //  max 3       [bow]
   treeNav: 0, //  max 3
   rage: 0,  //  max 3               [bow]
-  control: 3  //  max 3
+  control: 0  //  max 3
 };
 
 const hutUpgrades = [
@@ -187,9 +187,11 @@ function load_binary_resource(url) {
 let hasFocus = true;
 window.addEventListener("blur", function(event) { 
   hasFocus = false;
+  wildHordeMusic.pause();
 }, false);
 window.addEventListener("focus", function(event) { 
   hasFocus = true;
+  wildHordeMusic.resume();
 }, false);
 
 
@@ -278,11 +280,12 @@ function processMovement(sprite) {
   if (ax !== 0) {
     sprite.orientation = ax;
   }
-  const speed = evaluate(sprite.speed, sprite) * (sprite.dead ? 2 : 1) * (sprite.superSoldier && sprite.soldier ? .7 : 1);
-  const brake = evaluate(sprite.brake, sprite) - upgrades.control * 0.01;
+  const speed = evaluate(sprite.speed, sprite) * (sprite.dead ? 1.5 : 1) * (sprite.superSoldier && sprite.soldier ? .7 : 1);
+  const control = evaluate(sprite.control, sprite) ?? 0;
+  const brake = evaluate(sprite.brake, sprite) - control * 0.01;
   if (da) {
-    sprite.dx = (sprite.dx + ax / da * speed * (1 + upgrades.control * 1)) * brake;
-    sprite.dy = (sprite.dy + ay / da * speed / 2 * (1 + upgrades.control * 1)) * brake;
+    sprite.dx = (sprite.dx + ax / da * speed * (1 + control)) * brake;
+    sprite.dy = (sprite.dy + ay / da * speed / 2 * (1 + control)) * brake;
   } else {
     sprite.dx = sprite.dx * (brake);
     sprite.dy = sprite.dy * (brake);      
@@ -365,7 +368,7 @@ const sprite = {
   archerOrientation: 1,
   orientation: 1,
   // direction: undefined,
-  brake: .995,
+  brake: .99,
   // speed: .1,
   // speed: .06,
   // speed: .05,
@@ -392,6 +395,7 @@ const sprite = {
   // hidden: false,
   // tree: false,
   // cache: false,
+  control: () => upgrades.control,
   sprites: [
     sprite => evaluate({
       ...sprite,

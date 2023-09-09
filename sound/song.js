@@ -3,6 +3,7 @@ class Song {
       this.player = new CPlayer();
       this.player.init(song);
       this.prepare();
+      this.playing = false;
     }
   
     prepare() {
@@ -20,11 +21,22 @@ class Song {
 
     play() {
       this.audio?.play();
+      this.playing = true;
     }
+
+    pause() {
+      this.audio?.pause();
+    }
+
+    resume() {
+      if (this.playing) {
+        this.play();
+      }
+    }    
 
     stop() {
       if (this.audio) {
-        this.audio?.pause();
+        this.pause();
         this.audio.currentTime = 0;
       }
     }
