@@ -1,9 +1,13 @@
 body {
     color: silver;
-    background-color: black;
 }
 canvas {
     margin: auto;
+    transition: opacity 8s, background-color 0.5s;
+}
+h3 {
+    color: "#f77";
+    transition: opacity 8s;
 }
 .gameview {
     width: 100%;

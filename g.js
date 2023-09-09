@@ -1,11 +1,16 @@
+//  BEGINNING
 let q = document.querySelector.bind(document);
+document.addEventListener("DOMContentLoaded", () => { 
+  q("body").style.backgroundColor = "#100";
+  q("h3").style.opacity = 1;
+  setTimeout(() => {
 let canvas = q("canvas"); let ctx=canvas.getContext("2d");
 let cs = canvas.style;
 canvas.width = 2000; cs.width = `${canvas.width/2}px`;
 canvas.height = 1200; cs.height = `${canvas.height/2}px`;
 cs.border = "1px solid black";
 cs.backgroundColor = "#efd";
-cs.transition = "background-color 0.5s";
+setTimeout(() => cs.opacity = 1, 1000);
 
 const zoom = .75;
 const keys = {};
@@ -23,7 +28,7 @@ let locked = true;
 
 const wildHordeMusic = new Song(wildHorde);
 
-
+let startTime = 0;
 // const upgrades = {
 //   speedWhileShooting: 0,
 //   speed: 0,
@@ -33,15 +38,19 @@ const wildHordeMusic = new Song(wildHorde);
 //   money: 0,
 // };
 
-const upgrades = {
-  bow: 0,
-  speedWhileShooting: 1,
-  speed: 1, //  max 3
-  maxHealth: 0, //  max 3
-  shield: 0,
-  quickShot: 1,
-  money: 0,
-  rickoShot: 0, //  max 3
+let upgrades = window.upgrades = {
+  bow: 0, //  max 1                 [bow]
+  speedWhileShooting: 0,  //  max 1 [bow]
+  speed: 1, //  max 3               
+  maxHealth: 0, //  max 3           
+  shield: 0,  //  max 2             
+  quickShot: 0, //  max 1           [bow]
+  money: 0, // max 3                [bow]
+  rickoShot: 0, //  max 3           [bow]
+  giantPiercing: 0, //  max 3       [bow]
+  treeNav: 0, //  max 3
+  rage: 0,  //  max 3               [bow]
+  control: 3  //  max 3
 };
 
 const hutUpgrades = [
@@ -113,6 +122,7 @@ let soldierSuperSpeed = .7;
 const defaultmaxHealth = 6;
 
 let health = defaultmaxHealth;
+let rage = 0;
 
 const healthDiv = document.body.appendChild(document.createElement("div"));
 healthDiv.style.position = "absolute";
@@ -137,12 +147,15 @@ let money = 0;
 const moneyDiv = document.body.appendChild(document.createElement("div"));
 moneyDiv.style.position = "absolute";
 moneyDiv.style.top = canvas.offsetTop + 25;
-moneyDiv.style.left = canvas.offsetLeft;
+moneyDiv.style.left = canvas.offsetLeft + 5;
 moneyDiv.style.color = "#990";
 moneyDiv.style
 function showMeTheMoney() {
-  moneyDiv.textContent = !money ? "" : `⭐ ${money}`;
+  const s = Math.floor((Date.now() - startTime) / 1000);
+  moneyDiv.innerText = (!money ? "" : `Level ${hutLevel}\n⭐ ${money}\n${Math.floor(s/60)}:${(100 + s%60).toString().substring(1)}`);
 }
+
+setInterval(showMeTheMoney, 1000);
 
 
 const gameOverDiv = document.body.appendChild(document.createElement("div"));
@@ -181,12 +194,12 @@ window.addEventListener("focus", function(event) {
 
 
 let root;
-document.addEventListener("DOMContentLoaded", () => {
+function startGame() {
     const byteArray = load_binary_resource("rider.13k");
     root = decodeShape(byteArray);
     console.log(root);
     loop(0);
-});
+}
 
 const srcWidth = 1600;
 const srcHeight = 1000;
@@ -266,13 +279,13 @@ function processMovement(sprite) {
     sprite.orientation = ax;
   }
   const speed = evaluate(sprite.speed, sprite) * (sprite.dead ? 2 : 1) * (sprite.superSoldier && sprite.soldier ? .7 : 1);
-  const brake = sprite.brake;
+  const brake = evaluate(sprite.brake, sprite) - upgrades.control * 0.01;
   if (da) {
-    sprite.dx = (sprite.dx + ax / da * speed) * brake;
-    sprite.dy = (sprite.dy + ay / da * speed / 2) * brake;
+    sprite.dx = (sprite.dx + ax / da * speed * (1 + upgrades.control * 1)) * brake;
+    sprite.dy = (sprite.dy + ay / da * speed / 2 * (1 + upgrades.control * 1)) * brake;
   } else {
-    sprite.dx = sprite.dx * brake;
-    sprite.dy = sprite.dy * brake;      
+    sprite.dx = sprite.dx * (brake);
+    sprite.dy = sprite.dy * (brake);      
   }
   if (evaluate(sprite.moving, sprite)) {
     sprite.x += sprite.dx * dtt;
@@ -295,6 +308,8 @@ function exitHut(hut) {
     locked = false;
     onExit?.();
     onExit = null;
+    showHealth();
+    showMeTheMoney();
 }
 
 const sprite = {
@@ -350,11 +365,11 @@ const sprite = {
   archerOrientation: 1,
   orientation: 1,
   // direction: undefined,
-  brake: .99,
+  brake: .995,
   // speed: .1,
   // speed: .06,
   // speed: .05,
-  speed: sprite => (.08 + upgrades.speed * 0.03) * (evaluate(sprite.shooting, sprite) && !upgrades.speedWhileShooting ?
+  speed: sprite => (1 + rage * .2) * (.08 + upgrades.speed * 0.03) * (evaluate(sprite.shooting, sprite) && !upgrades.speedWhileShooting ?
     0.5 : 1),
   x: 300, y: 500,
   moving: sprite => Math.abs(sprite.dx) > threshold || Math.abs(sprite.dy) > threshold,
@@ -498,7 +513,7 @@ function showSprite(sprite, time, dt, accumulator) {
       for (let i = arrowSize - 1; i >= 0; i--) {
         const arrow = arrows[i];
         if (arrow.x - sh[0] > left && arrow.x - sh[0] < right && arrow.y - sh[1] > top && arrow.y - sh[1] < bottom) {
-          const hit = superSoldier ? Math.random() < .05 : true;
+          const hit = superSoldier ? Math.random() < (.05 + (.2 * upgrades.giantPiercing)) : true;
           const hitFoe = foes[foeIndex];
           if (hit) {
             hitFoe.dead = time;    
@@ -853,6 +868,9 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
           if (!inHut) {
             inHut = sprite;
             sprite.enteredHut = sprite.time;
+            if (!startTime) {
+              startTime = Date.now();
+            }
 
             if (!hutInfo(inHut).level) {
               hutInfo(inHut).level = hutLevel++;
@@ -868,8 +886,8 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
           shakeSize = 20;
           hero.x -= hx;
           hero.y -= hy;
-          hero.dx = 0;
-          hero.dy = 0;
+          hero.dx *= (upgrades.treeNav * .3);
+          hero.dy *= (upgrades.treeNav * .3);
         }
         // cs.backgroundColor = "#a00";
         // setTimeout(() => {
@@ -1112,6 +1130,11 @@ function drawGround() {
 
 
 
-showHealth();
-showMeTheMoney();
 
+
+
+
+
+startGame();
+}, 3000);
+}); /// END
