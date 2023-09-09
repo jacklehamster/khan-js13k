@@ -18,3 +18,8 @@ song.prepare();
 song.play();
 song.stop();
 ```
+
+# Files needed:
+- soundbox.js
+- song.js
+- fur-elise.js / wild-horde.js
