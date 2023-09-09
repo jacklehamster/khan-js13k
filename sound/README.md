@@ -42,5 +42,6 @@ The songs were produced using https://sb.bitsnbites.eu/. To edit a song, just dr
 
 ## Credits
 
-The songs are covers of Ennio Moricone's work. (So they likely can't be used commercially).
-
+- The songs are covers of Ennio Moricone's work. (So they likely can't be used commercially).
+- The program used to develop all songs and the player are from: https://sb.bitsnbites.eu/
+    Note: soundbox.js is grabbed from https://gitlab.com/mbitsnbites/soundbox/-/blob/master/player-small.js
