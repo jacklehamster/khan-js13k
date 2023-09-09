@@ -6,12 +6,16 @@
     <script>
         const wildHordeSong = new Song(wildHorde);
         const furEliseSong = new Song(furElise);
+        function stop() {
+            wildHordeSong.stop();
+            furEliseSong.stop();
+        }
     </script>
 
     <body>
-        <button onclick="wildHordeSong.play();">WILD HORDE</button>
-        <button onclick="furEliseSong.play();">FUR ELISE</button>
-        <button onclick="wildHordeSong.stop(); furEliseSong.stop();">STOP</button>
+        <button onclick="stop(); wildHordeSong.play();">WILD HORDE</button>
+        <button onclick="stop(); furEliseSong.play();">FUR ELISE</button>
+        <button onclick="stop();">STOP</button>
     </body>
 </html>
 
