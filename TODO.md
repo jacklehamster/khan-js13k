@@ -1,9 +1,9 @@
-- [ ] Play Moricone-style music
+- [x] Play Moricone-style music
 - [ ] Play sound effects
 - [ ] Drop some blood when enemy hit
 - [ ] Create some dust when the horse takes some steps.
 - [ ] Have soldiers rise from ground like zombies
-- [ ] Freeze scrolling before horse enters first hut, and hide enemies.
+- [x] Freeze scrolling before horse enters first hut, and hide enemies.
 - [ ] Show cut-scene and dialog in first hut.
 - [ ] Show shops in subsequent huts.
   - [ ] Shops affect upgrades
