@@ -1,6 +1,6 @@
 # Setup
 
-```
+```html
     <script src=sound/fur-elise.js></script>
     <script src=sound/wild-horde.js></script>
     <script src=sound/soundbox.js></script>
