@@ -23,3 +23,11 @@ song.stop();
 - soundbox.js
 - song.js
 - fur-elise.js / wild-horde.js
+
+# Editing
+
+The songs were produced using https://sb.bitsnbites.eu/. To edit a song, just drag the sbox file in there.
+
+# Credits
+
+The songs are covers of Ennio Moricone's work. (So they likely can't be used commercially).
