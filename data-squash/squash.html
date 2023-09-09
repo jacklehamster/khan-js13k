@@ -1,0 +1,61 @@
+<html>
+    <script src=../sound/wild-horde.js></script>
+
+    <script>
+        function stabalize(obj) {
+            if (typeof(obj) === "object") {
+                if (Array.isArray(obj)) {
+                    return [...obj].map(a => stabalize(obj));
+                } else if (obj) {
+                    return Object.fromEntries(Object.entries(obj).sort((a,b) => a[0].localeCompare(b[0])));
+                }
+            }
+            return obj;
+        }
+
+        function sig(obj) {
+            return JSON.stringify(stabalize(obj), null, "  ");
+        }
+
+        console.log(wildHorde);
+        console.log(JSON.stringify(squash(wildHorde), null, "  "));
+        console.log(unsquash(squash(wildHorde)));
+        console.log("WH");
+        console.log(sig(wildHorde));
+        console.log("WH2");
+        console.log(sig(unsquash(squash(wildHorde))));
+
+        function squash(obj) {
+            if (typeof(obj) === "object") {
+                if (Array.isArray(obj)) {
+                    if (obj.every(n => n === null || n === undefined || typeof(n) === "number")) {
+                        return obj.map(a => 36 + (a === null || a === undefined ? -1 : a)).map(a => String.fromCharCode(a)).join("");
+                    } else {
+                        return obj.map(a => squash(a));
+                    }
+                } else if (obj) {
+                    return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, squash(v)]));
+                }
+            }
+            return obj;            
+        }
+
+        function unsquash(obj) {
+            if (typeof(obj) === "string") {
+                return [...obj].map(c => {
+                    const ch = c.charCodeAt() - 36;
+                    return ch < 0 ? null : ch;
+                });
+            }
+
+            if (typeof(obj) === "object") {
+                if (Array.isArray(obj)) {
+                    return obj.map(a => unsquash(a));
+                } else if (obj) {
+                    return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, unsquash(v)]));
+                }
+            }
+            return obj;
+        }
+    </script>
+</html>
