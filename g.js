@@ -69,12 +69,21 @@ const hutUpgrades = [
   () => {
     gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 40;
-    soldierSuperSpeed += .2;
+    soldierSuperSpeed += .1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 50;
+    soldierSuperSpeed += .1;
   },
   () => {
     gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 60;
     soldierSuperSpeed += .1;
+  },
+  () => {
+    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    foesTotal = 70;
   },
   () => {
     gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
@@ -124,11 +133,23 @@ const defaultmaxHealth = 6;
 let health = defaultmaxHealth;
 let rage = 0;
 
-const healthDiv = document.body.appendChild(document.createElement("div"));
-healthDiv.style.position = "absolute";
-healthDiv.style.top = canvas.offsetTop;
-healthDiv.style.left = canvas.offsetLeft + 3;
-function showHealth() {
+// const healthDiv = document.body.appendChild(document.createElement("div"));
+// healthDiv.style.position = "absolute";
+// healthDiv.style.top = canvas.offsetTop;
+// healthDiv.style.left = canvas.offsetLeft + 13;
+// function showHealth() {
+// }
+
+let timeLimit = 60 * 7;
+
+let money = 0;
+const moneyDiv = document.body.appendChild(document.createElement("div"));
+moneyDiv.style.position = "absolute";
+moneyDiv.style.top = canvas.offsetTop + 25;
+moneyDiv.style.left = canvas.offsetLeft + 20;
+moneyDiv.style.color = "#880";
+moneyDiv.style
+function showMeTheMoney() {
   const maxHealth = defaultmaxHealth + upgrades.maxHealth * 2;
   let str = "";
   for (let i = 0; i < Math.floor(health / 2); i++) {
@@ -140,19 +161,11 @@ function showHealth() {
   for (let i = Math.ceil(health / 2); i < maxHealth / 2; i++) {
     str += "🩶";    
   }
-  healthDiv.innerText = str;
-}
+//  healthDiv.innerText = str;
 
-let money = 0;
-const moneyDiv = document.body.appendChild(document.createElement("div"));
-moneyDiv.style.position = "absolute";
-moneyDiv.style.top = canvas.offsetTop + 25;
-moneyDiv.style.left = canvas.offsetLeft + 5;
-moneyDiv.style.color = "#990";
-moneyDiv.style
-function showMeTheMoney() {
-  const s = Math.floor((Date.now() - startTime) / 1000);
-  moneyDiv.innerText = (!money ? "" : `Level ${hutLevel}\n⭐ ${money}\n${Math.floor(s/60)}:${(100 + s%60).toString().substring(1)}`);
+  const now = Math.max(inHut ? inHut.enteredHut : (screenPaused || lastframeTime), 0);
+  const s = timeLimit - Math.floor((now - startTime) / 1000);
+  moneyDiv.innerText = locked? "" : `Level ${hutLevel}\n${str}\n⭐ ${money}\n${Math.floor(s/60)}:${(100 + s%60).toString().substring(1)}`;
 }
 
 setInterval(showMeTheMoney, 1000);
@@ -160,8 +173,8 @@ setInterval(showMeTheMoney, 1000);
 
 const gameOverDiv = document.body.appendChild(document.createElement("div"));
 gameOverDiv.style.position = "absolute";
-gameOverDiv.style.top = canvas.offsetTop + 50;
-gameOverDiv.style.left = canvas.offsetLeft + 10;
+gameOverDiv.style.top = canvas.offsetTop + 100;
+gameOverDiv.style.left = canvas.offsetLeft + 50;
 gameOverDiv.style.color = "snow";
 gameOverDiv.textContent = "Press ESC to continue";
 gameOverDiv.style.display = "none";
@@ -184,14 +197,20 @@ function load_binary_resource(url) {
   return byteArray;
 }
 
-let hasFocus = true;
+let screenPaused = 0;
 window.addEventListener("blur", function(event) { 
-  hasFocus = false;
-  wildHordeMusic.pause();
+  if (!screenPaused) {
+    screenPaused = lastframeTime;
+    wildHordeMusic.pause();  
+  }
 }, false);
-window.addEventListener("focus", function(event) { 
-  hasFocus = true;
-  wildHordeMusic.resume();
+
+window.addEventListener("focus", function(event) {
+  if (screenPaused) {
+    startTime += (lastframeTime - screenPaused);
+    screenPaused = 0;
+    wildHordeMusic.resume();  
+  }
 }, false);
 
 
@@ -300,19 +319,25 @@ function processMovement(sprite) {
 
 let onExit = null;
 function exitHut(hut) {
-    hero.x = hut.x;
-    hero.y = hut.y + 200;
-    hero.dx = 0;
-    hero.dy = 0;
-    let info = hutInfo(inHut);
-    info.closed = true;
-    info.onFire = true;
-    inHut = null;
-    locked = false;
-    onExit?.();
-    onExit = null;
-    showHealth();
-    showMeTheMoney();
+  if (locked) {
+    startTime = lastframeTime;
+  } else {
+    startTime += (lastframeTime - inHut.enteredHut);
+  }
+
+  hero.x = hut.x;
+  hero.y = hut.y + 200;
+  hero.dx = 0;
+  hero.dy = 0;
+  let info = hutInfo(inHut);
+  info.closed = true;
+  info.onFire = true;
+  inHut = null;
+  locked = false;
+  onExit?.();
+  onExit = null;
+  // showHealth();
+  showMeTheMoney();
 }
 
 const sprite = {
@@ -340,7 +365,7 @@ const sprite = {
         hero.dead = 0;
         gameOverDiv.style.display = "none";
         showMeTheMoney();
-        showHealth();
+        // showHealth();
         wildHordeMusic.play();
       }
     }
@@ -758,7 +783,8 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
         } else {
           cs.backgroundColor = "#a00";
           health = Math.max(0, health - (superSoldier ? 2 : 1));
-          showHealth();
+          showMeTheMoney();
+          // showHealth();
         }
         shakeSize = 40;
         setTimeout(() => {
@@ -847,7 +873,7 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
   // const cos = Math.cos(angle);
   // const sin = Math.sin(angle);
   const isHut = index <= 1;
-  const repeatDistance = isHut ? 20000 : 4000;
+  const repeatDistance = isHut ? 18000 : 4000;
   const repeatCond = repeatDistance / 2 + 500;
   const tree = {
     ...copy(sprite),
@@ -872,9 +898,6 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
           if (!inHut) {
             inHut = sprite;
             sprite.enteredHut = sprite.time;
-            if (!startTime) {
-              startTime = Date.now();
-            }
 
             if (!hutInfo(inHut).level) {
               hutInfo(inHut).level = hutLevel++;
@@ -883,7 +906,8 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
           
 
             health = defaultmaxHealth + upgrades.maxHealth * 2;
-            showHealth();
+            showMeTheMoney();
+            // showHealth();
             showGameOver();
           }
         } else {
@@ -968,10 +992,10 @@ function loop(time) {
   // if (toggle) {
   //   return;
   // }
-  if (!hasFocus) {
+  lastframeTime = Math.max(lastframeTime, time - 100);
+  if (screenPaused) {
     return;
   }
-  lastframeTime = Math.max(lastframeTime, time - 100);
   dt = time - lastframeTime;
 //  console.log(dt);
   lastframeTime = time;
