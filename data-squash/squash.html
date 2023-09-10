@@ -1,7 +1,19 @@
 <html>
     <script src=../sound/wild-horde.js></script>
+    <textarea id="area" style="width: 100%; height: 50%"></textarea>
 
     <script>
+        const squashNum = 36;
+
+
+        Array.prototype.mmap = function(callback) {
+            const m = [];
+            for (let i = 0; i < this.length; i++) {
+                m[i] = callback(this[i]);
+            }
+            return m;
+        }
+
         function stabalize(obj) {
             if (typeof(obj) === "object") {
                 if (Array.isArray(obj)) {
@@ -20,16 +32,13 @@
         console.log(wildHorde);
         console.log(JSON.stringify(squash(wildHorde), null, "  "));
         console.log(unsquash(squash(wildHorde)));
-        console.log("WH");
-        console.log(sig(wildHorde));
-        console.log("WH2");
-        console.log(sig(unsquash(squash(wildHorde))));
+        console.log(sig(wildHorde) === sig(unsquash(squash(wildHorde))));
 
         function squash(obj) {
             if (typeof(obj) === "object") {
                 if (Array.isArray(obj)) {
                     if (obj.every(n => n === null || n === undefined || typeof(n) === "number")) {
-                        return obj.map(a => 36 + (a === null || a === undefined ? -1 : a)).map(a => String.fromCharCode(a)).join("");
+                        return obj.mmap(a => squashNum + (a === null || a === undefined ? -1 : a)).map(a => String.fromCharCode(a)).join("");
                     } else {
                         return obj.map(a => squash(a));
                     }
@@ -43,7 +52,7 @@
         function unsquash(obj) {
             if (typeof(obj) === "string") {
                 return [...obj].map(c => {
-                    const ch = c.charCodeAt() - 36;
+                    const ch = c.charCodeAt() - squashNum;
                     return ch < 0 ? null : ch;
                 });
             }
@@ -57,5 +66,8 @@
             }
             return obj;
         }
+
+        document.querySelector("#area").value = JSON.stringify(squash(wildHorde));
     </script>
+
 </html>

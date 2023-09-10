@@ -12,21 +12,72 @@ cs.border = "1px solid black";
 cs.backgroundColor = "#efd";
 setTimeout(() => cs.opacity = 1, 1000);
 
+const costMul = 200;
 const zoom = .75;
 const keys = {};
 document.addEventListener("keyup", (e) => {
   delete keys[e.code];
 });
+
+function doneShopping() {
+  exitHut(inHut);
+  closeShop();
+  showText("");
+  wildHordeMusic.play();
+  return true;
+}
+
+document.addEventListener("mousemove", () => {
+  cs.cursor = "";
+});
+
 document.addEventListener("keydown", (e) => {
   keys[e.code] = true;
+  cs.cursor = "none";
+  if(shopDiv.style.display === "") {
+    const s = shopList;
+
+    let closing = false;
+    const bowLess = !upgrades.bow;
+    if (keys.KeyW || keys.ArrowUp)
+    shopIndex = Math.max(0, shopIndex - 1);
+    if (keys.KeyS || keys.ArrowDown)
+      shopIndex = Math.min(s.length - (bowLess ? 1 : 0), shopIndex + 1);
+    if (keys.Space) {
+      if (shopIndex === s.length) {
+        closing = doneShopping();
+      } else if (!purchased[shopIndex]) {
+        const shopItem = [...shop].filter(canBuy)[shopIndex];
+        if (shopItem) {
+          purchased[shopIndex] = true;
+          money -= shopItem.cost[0] * costMul;
+          showMeTheMoney();
+          shopItem?.buy(shopItem);  
+          if (bowLess) {
+            closing = doneShopping();          
+          }  
+        }
+      }
+    }
+    delete keys[e.code];
+    if (!closing) {
+      showShop(true);
+    }
+  }
   e.preventDefault();
 });
+
+function closeShop() {
+  shopDiv.style.display = "none";  
+}
+
 const accumulator = [];
 
 const sh = [0,0];
 let locked = true;
 
-const wildHordeMusic = new Song(wildHorde);
+let wildHordeMusic = new Song(wildHorde);
+const furEliseMusic = new Song(furElise);
 
 let startTime = 0;
 // const upgrades = {
@@ -38,92 +89,150 @@ let startTime = 0;
 //   money: 0,
 // };
 
-let upgrades = window.upgrades = {
-  bow: 0, //  max 1                 [bow]
-  speedWhileShooting: 0,  //  max 1 [bow]
-  speed: 0, //  max 3               
-  maxHealth: 0, //  max 3           
-  shield: 0,  //  max 2             
-  quickShot: 0, //  max 1           [bow]
-  money: 0, // max 3                [bow]
-  rickoShot: 0, //  max 3           [bow]
-  giantPiercing: 0, //  max 3       [bow]
-  treeNav: 0, //  max 3
-  rage: 0,  //  max 3               [bow]
-  control: 0  //  max 3
-};
+// let upgrades = window.upgrades = {
+//   bow: 0, //  max 1                 [bow]
+//   speedWhileShooting: 0,  //  max 1 [bow]
+//   speed: 0, //  max 3               
+//   maxHealth: 0, //  max 3           
+//   shield: 0,  //  max 2
+//   quickShot: 0, //  max 1           [bow]
+//   money: 0, // max 3                [bow]
+//   rickoShot: 0, //  max 3           [bow]
+//   giantPiercing: 0, //  max 3       [bow]
+//   treeNav: 0, //  max 3
+//   // rage: 0,  //  max 3               [bow]
+//   control: 0,  //  max 3
+//   borte: 0,
+// };
 
+function buy(item) {
+  upgrades[item.name]++;
+  if (!item.recurring) {
+    item.cost.shift();
+  }
+}
+
+function repeatString(s, num) {
+  return new Array(num).fill(s).join("")
+}
+
+let bowshop;
+const shop = [
+  bowshop = { name: "bow", title: "Bow and arrows", description: "(Recommended) To shoot down enemies and collect 🏵️", cost: [0], buy },
+  { name: "speed", title: "Speed boost", description: () => `Change hoof for faster horse (${repeatString("⭐", upgrades.speed + 1)})`, cost: [0,2,3], buy},
+  { name: "speedWhileShooting", title: "Stable aim", description: "Stabilize bow to shoot without slow down the horse", cost: [2], req: "bow", buy},
+  { name: "maxHealth", title: "Max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [2, 3, 4], buy},
+  { name: "shield", title: "Shield", description: () => `This shield blocks one hit. Re-usable after ${20 / (upgrades.shield+1)}s`, cost: [2, 4], buy},
+  // { name: "reflect", cost: [2, 4], req: "shield"},
+  { name: "quickShot", title: "Quick shot", description: "Learn a skill to shoot immediately after one hit", cost: [2], req: "bow", buy},
+  { name: "money", title: "Pillage", description: () => `Earn knowledge of finding loot. Each kill provides more 🏵️ (x${2 + upgrades.money})`, cost: [1, 2, 3], req: "bow", buy},
+  { name: "rickoShot", title: "Rickoshot", description: () => `Learn a skill. Arrow aimed properly has +${30 * (upgrades.rickoShot + 1)}% chance to rickochet after hitting.`, cost: [1, 2, 3], req: "bow", buy},
+  { name: "giantPiercing", title: "Giant piercing", description: () => `Sharpened arrows increases chance of killing a giant from ${5 + 20 * (upgrades.giantPiercing)}% to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy},
+  { name: "treeNav", title: "Forest navigation", description: () => `A compass to help navigation in forest (${repeatString("⭐", upgrades.treeNav + 1)})`, cost: [1, 2, 3], buy},
+  { name: "control", title: "Horse control", description: () => `Improved saddle for better control (${repeatString("⭐", upgrades.control + 1)})`, cost: [1, 2, 3], buy},
+  { name: "time", title: "Extra time", description: "In exchange of 🏵️, I will delay the boat (+15s)", recurring: 1, cost: [.5], buy: () => {
+    startTime += 15000;
+    showMeTheMoney();
+    showText("This will give you a bit more time.");
+  }},
+  { name: "health", title: "Rejuvinate", description: "Drink kumis, restore health to max", recurring: 1, cost: [1], buy: () => {
+    health = defaultmaxHealth + upgrades.maxHealth * 2;
+    showMeTheMoney();
+    showText("This ale should give you energy to go on!");
+  }},
+  { name: "gamble", title: "Gamble", description: shopItem => 
+      `Play a game of Shagai.(30% chance to double your 🏵️)`,
+      // `30% chance to double your 🏵️`,
+      reccurring: 1, cost: [.5], buy: () => {
+    if (Math.random() <= .35) {
+      money += costMul;
+      money *= 2;
+      showMeTheMoney();
+      showText("Lucky!");
+    } else {
+      showText("You lost, my friend");
+    }
+  }},
+  // { name: "shuffle", title: "Re-shuffle", description: "Get another merchant. Resets all shop items", reccurring: 1, cost: [.25], buy: () => {
+  //   showText("I'll get you someone");
+  //   showShop(true);
+  // }},
+];
+let upgrades = {...Object.fromEntries(shop.map(item => [item.name, 0])), borte: 0};
+window.shop = shop;
+window.upgrades = upgrades;
+
+function showText(text) {
+  gameOverDiv.style.display = text.length ? "" : "none";
+  gameOverDiv.innerText = text;
+ 
+}
+
+const merchantText = "Börte is in another hut, but I'll sell you some items for 🏵️";
 const hutUpgrades = [
   () => {},
   () => {
-    upgrades.bow++;
     foesTotal = 20;
-    
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    
+    const text = `Spare my life, Great Khan! I'll help you find Börte.\nHurry! Jamukha plans to send her away on a boat.\nTake one item, then follow the sign.`;
+    showText(text);
     // for (hutLevel++;hutLevel < hutUpgrades.length; hutLevel++) {
     //     hutUpgrades[hutLevel]?.();
     // }
     // hutLevel = hutUpgrades.length - 1;
   },
   () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+//    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 40;
     soldierSuperSpeed += .1;
+    showText(merchantText);
   },
   () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+//    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 50;
     soldierSuperSpeed += .1;
+    showText(merchantText);
   },
   () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 60;
     soldierSuperSpeed += .1;
+    showText(merchantText);
   },
   () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 70;
+    showText(merchantText);
   },
   () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 80;
     soldierSuperSpeed += .1;
+    showText(merchantText);
   },
   () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 100;
     soldierSuperSpeed += .1;
+    // const now = Math.max(inHut ? inHut.enteredHut : (screenPaused || lastframeTime), 0);
+    const previousMusic = wildHordeMusic;
+    findBorte();
+//    foundBorte = now();
+    // upgrades.borte = now;
+    showText(`Börte is found, alive and well.\nBörte: "Took you long enough! Jamukha escaped. Let's go after him, I'll ride with you."`);
+    return () => previousMusic.stop();
   },
+//   () => {
+// //    gameOverDiv.textContent = `Level ${hutLevel}\n NOTE: This is the right level for story mode ending.`;
+//     showText(`You find Jamukha standing in the hut.\nJamukha: "I see you found Börte. Let's fight to the death, Genghis."\nKhan: "Sure, I'll make sure to send you to the ancestors."\nBörte: "Back off Genghis. This time, revenge is mine!"`);
+//     foesTotal = 150;
+//     soldierSuperSpeed += .1;
+//   },
   () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\n NOTE: This is the right level for story mode ending.`;
-    foesTotal = 150;
+    // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+    showText(`Level ${hutLevel}\nBörte found Jamukha and got her revenge. (Congratulations! You beat the game, but feel free keep going)`);
+    // gameOverDiv.textContent = `Level ${hutLevel}\n.(You beat the game, but can keep going)`;
+    foesTotal = Math.min(foesTotal + 50, 400);
     soldierSuperSpeed += .1;
-  },
-  () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    foesTotal = 200;
-    soldierSuperSpeed += .1;
-  },
-  () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    foesTotal = 300;
-    soldierSuperSpeed += .1;
-  },
-  () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    foesTotal = 400;
-    soldierSuperSpeed += .1;
-  },
-  () => {
-    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    foesTotal = 400;
-    soldierSuperSpeed += .1;
-  },
-  () => {
-    foesTotal = 400;
-    gameOverDiv.textContent = `Level ${hutLevel}\nYou've reached the last supported level.`;
-    soldierSuperSpeed += .5;
   },
 ];
 let soldierSuperSpeed = .7;
@@ -140,15 +249,19 @@ let rage = 0;
 // function showHealth() {
 // }
 
-let timeLimit = 60 * 7;
+let timeLimit = 60 * 8;
 
+let foundBorte = 0;
 let money = 0;
 const moneyDiv = document.body.appendChild(document.createElement("div"));
-moneyDiv.style.position = "absolute";
-moneyDiv.style.top = canvas.offsetTop + 25;
-moneyDiv.style.left = canvas.offsetLeft + 20;
-moneyDiv.style.color = "#880";
-moneyDiv.style
+const mds = moneyDiv.style;
+mds.position = "absolute";
+mds.top = canvas.offsetTop + 25;
+mds.left = canvas.offsetLeft + 20;
+mds.color = "#880";
+
+let now = () => foundBorte || Math.max(inHut ? inHut.enteredHut : (screenPaused || lastframeTime));
+
 function showMeTheMoney() {
   const maxHealth = defaultmaxHealth + upgrades.maxHealth * 2;
   let str = "";
@@ -159,28 +272,34 @@ function showMeTheMoney() {
     str += "❤️‍🩹";
   }
   for (let i = Math.ceil(health / 2); i < maxHealth / 2; i++) {
-    str += "🩶";    
+    str += "🩶";
   }
 //  healthDiv.innerText = str;
 
-  const now = Math.max(inHut ? inHut.enteredHut : (screenPaused || lastframeTime), 0);
-  const s = timeLimit - Math.floor((now - startTime) / 1000);
-  moneyDiv.innerText = locked? "" : `Level ${hutLevel}\n${str}\n⭐ ${money}\n${Math.floor(s/60)}:${(100 + s%60).toString().substring(1)}`;
+//  const now = Math.max(inHut ? inHut.enteredHut : (screenPaused || lastframeTime), 0);
+  const s = Math.max(0, timeLimit - Math.floor((now() - startTime) / 1000));
+  moneyDiv.innerText = locked? "" : `Level ${hutLevel}\n${str}\n🏵️ ${money}\n${Math.floor(s/60)}:${(100 + s%60).toString().substring(1)}`;
+  if (health && s <= 0) {
+    health = 0;
+    lifeCheck();
+  }
 }
 
 setInterval(showMeTheMoney, 1000);
 
 
 const gameOverDiv = document.body.appendChild(document.createElement("div"));
-gameOverDiv.style.position = "absolute";
-gameOverDiv.style.top = canvas.offsetTop + 100;
-gameOverDiv.style.left = canvas.offsetLeft + 50;
-gameOverDiv.style.color = "snow";
-gameOverDiv.textContent = "Press ESC to continue";
-gameOverDiv.style.display = "none";
+const gods = gameOverDiv.style;
+gods.position = "absolute";
+gods.top = canvas.offsetTop + 50;
+gods.left = canvas.offsetLeft + 150;
+//gods.color = "snow";
+// gameOverDiv.textContent = "Press ESC to continue";
+// gameOverDiv.style.display = "none";
+showText("");
 function showGameOver() {
   wildHordeMusic.stop();
-  gameOverDiv.style.display = "";
+  showText("GAME OVER, KHAN" + (canContinue() ? "\nESC to continue. You will lose all money and one upgrade." : ""));
 }
 
 function load_binary_resource(url) {
@@ -209,7 +328,9 @@ window.addEventListener("focus", function(event) {
   if (screenPaused) {
     startTime += (lastframeTime - screenPaused);
     screenPaused = 0;
-    wildHordeMusic.resume();  
+    if (!inHut && !hero.dead) {
+      wildHordeMusic.resume();  
+    }
   }
 }, false);
 
@@ -218,7 +339,7 @@ let root;
 function startGame() {
     const byteArray = load_binary_resource("rider.13k");
     root = decodeShape(byteArray);
-    console.log(root);
+    // console.log(root);
     loop(0);
 }
 
@@ -248,9 +369,9 @@ function showFrame(ctx, x, y, w, h, frame, anim, color, ddy, random, debug) {
 
 function moveTo(ctx, offsetX, offsetY, x, y, penDown, w, h, ddy, random) {
   if (penDown) {
-      ctx.lineTo(offsetX + x, offsetY + y + (x/w - .5)*10 * ddy + random * (Math.random() - .5));
+      ctx.lineTo(offsetX + x, offsetY + y + (x/w - .5)*5 * ddy + random * (Math.random() - .5));
   } else {
-      ctx.moveTo(offsetX + x, offsetY + y + (x/w - .5)*10 * ddy + random * (Math.random() - .5));
+      ctx.moveTo(offsetX + x, offsetY + y + (x/w - .5)*5 * ddy + random * (Math.random() - .5));
   }
 }
 
@@ -276,7 +397,7 @@ function shootArrow(sprite) {
   if (arrowSize >= arrows.length) {
     arrows.push({});
   }
-  arrows[arrowSize].dx = archerOrientation * 120 + dx * 2;
+  arrows[arrowSize].dx = evaluate(archerOrientation, sprite) * 120 + dx * 2;
   arrows[arrowSize].dy = - 5 + dy * 10;
   arrows[arrowSize].x = x + arrows[arrowSize].dx;
   arrows[arrowSize].y = y - 80 * zoom;
@@ -299,7 +420,7 @@ function processMovement(sprite) {
   if (ax !== 0) {
     sprite.orientation = ax;
   }
-  const speed = evaluate(sprite.speed, sprite) * (sprite.dead ? 1.5 : 1) * (sprite.superSoldier && sprite.soldier ? .7 : 1);
+  const speed = evaluate(sprite.speed, sprite) * (sprite.dead ? 1.5 : 1) * (sprite.superSoldier && sprite.soldier ? .8 : 1);
   const control = evaluate(sprite.control, sprite) ?? 0;
   const brake = evaluate(sprite.brake, sprite) - control * 0.01;
   if (da) {
@@ -331,7 +452,7 @@ function exitHut(hut) {
   hero.dy = 0;
   let info = hutInfo(inHut);
   info.closed = true;
-  info.onFire = true;
+  info.onFire = true;// hut.level;
   inHut = null;
   locked = false;
   onExit?.();
@@ -339,6 +460,12 @@ function exitHut(hut) {
   // showHealth();
   showMeTheMoney();
 }
+
+function canContinue() {
+  return Object.keys(upgrades).filter(k => upgrades[k]).length;
+}
+
+
 
 const sprite = {
   parent: true,
@@ -350,24 +477,28 @@ const sprite = {
       return;
     }
     if (inHut) {
-      if (keys.Escape) {
-        exitHut(inHut);
-        gameOverDiv.style.display = "none";
-        wildHordeMusic.play();
-      } else {
-        return;
-      }
+      // if (keys.Escape) {
+      //   exitHut(inHut);
+      //   gameOverDiv.style.display = "none";
+      //   wildHordeMusic.play();
+      // } else {
+      //   return;
+      // }
     }
-    if (!health) {
-      if (keys.Escape) {
-        health = defaultmaxHealth + upgrades.maxHealth * 2;
-        money = 0;
-        hero.dead = 0;
-        gameOverDiv.style.display = "none";
-        showMeTheMoney();
-        // showHealth();
-        wildHordeMusic.play();
+    if (!health && keys.Escape && canContinue()) {
+      health = defaultmaxHealth + upgrades.maxHealth * 2;
+      money = 0;
+      hero.dead = 0;
+      showText("");
+      startTime = Math.max(startTime, now() - timeLimit * 1000 + 60000);
+      // showHealth();
+      wildHordeMusic.play();
+      const upgrade = Object.keys(upgrades).filter(k => upgrades[k]).sort(() => Math.random() - .5)[0];
+      upgrades[upgrade]--;
+      if (upgrade === "bow") {
+        bowshop.cost.push(0);
       }
+      showMeTheMoney();
     }
     if (!health && sprite.hero) {
       return;
@@ -442,13 +573,12 @@ const sprite = {
     sprite => evaluate({
       ...sprite,
       process: undefined,
-      y: sprite => evaluate(sprite.y, sprite),
       parent: false,
       sprites: undefined,
       animation: sprite => sprite.hut ? "hut" : "horse",
       range: (sprite) => sprite.hut ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
       hotspot: [.47, .72],
-      color: sprite => sprite.hut && hutInfo(sprite).closed ? "#ba6" : sprite.superSoldier ? "#a08" : sprite.foe ? "#004" : "#630",
+      color: sprite => sprite.borte ? "#f98" : sprite.hut && hutInfo(sprite).closed ? "#ba6" : sprite.superSoldier ? "#a08" : sprite.foe ? "#004" : "#630",
       direction: (sprite) => Math.sign(sprite.orientation),
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
       random: sprite => sprite.superSoldier ? 100 : 4,
@@ -556,7 +686,7 @@ function showSprite(sprite, time, dt, accumulator) {
             hitFoe.goal[0] = hitFoe.x + -gx / gdist * 2000;
             hitFoe.goal[1] = hitFoe.y + -gy / gdist * 2000;  
 
-            money += (superSoldier ? 100 : 10) * (1 + .5 * upgrades.money);
+            money += (superSoldier ? 50 : 8) * (1 + upgrades.money);
             showMeTheMoney();
           } else {
             hitFoe.hitTime = time;
@@ -715,7 +845,19 @@ function addCorpse(foe, time, dx, color) {
   corpses.push(corpse);
   return corpse;
 }
+function lifeCheck () {
+  shakeSize = 40;
+  setTimeout(() => {
+    cs.backgroundColor = "#efd";
+  }, 150);
 
+  if (!health) {
+    addCorpse(hero, hero.time, (hero.x - sprite.x) * 2, hero.color);
+    hero.dead = hero.time;
+    showGameOver();
+    wildHordeMusic.stop();
+  }
+}
 
 //  EASY vvvv
 let foesTotal = 0;
@@ -727,7 +869,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
 
-  const superSoldier = index % 20 === 0;
+  const superSoldier = index % 20 === 0 && index > 30;
   const soldier = index % 3 <= 1;
   // if (superSoldier) {
   //   console.log(superSoldier, soldier);    
@@ -791,12 +933,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
           cs.backgroundColor = "#efd";
         }, 150);
 
-        if (!health) {
-          addCorpse(hero, hero.time, (hero.x - sprite.x) * 2, hero.color);
-          hero.dead = hero.time;
-          showGameOver();
-          wildHordeMusic.stop();
-        }
+        lifeCheck();
 
         const angle = Math.random() * Math.PI * 2;
         const cos = Math.cos(angle);
@@ -860,6 +997,60 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
   return foe;
 });
 
+
+function canBuy(item) {
+  return item.cost?.length && money >= item.cost[0] * costMul;
+}
+
+const shopDiv = document.body.appendChild(document.createElement("div"));
+shopDiv.style.position = "absolute";
+shopDiv.style.left = "200px";
+shopDiv.style.top = "200px"
+shopDiv.style.display = "none";
+const shopDivs = new Array(5).fill(null).map(() => {
+  const s = shopDiv.appendChild(document.createElement("div"));
+  s.style.backgroundColor = "#444";
+  s.style.margin = "20px 10px";
+  s.style.padding = "10px";
+  return s;
+});
+
+const purchased = shopDivs.map(() => null);
+let shopIndex = 0;
+let shopList = [];
+function showShop(refresh) {
+  if (!refresh) {
+    shopIndex = 0;
+    shop.sort((a, b) => {
+      if (a.name === "bow") {
+        return -1;
+      } else if (b.name === "bow") {
+        return 1;
+      }
+      return Math.random() - .5;
+    });
+    shopList = [...shop].filter(canBuy).slice(0, shopDivs.length-1);
+  }
+  const s = shopList;
+  shopDiv.style.display = "";
+  for (let i = 0; i < shopDivs.length; i++) {
+    if (!refresh) {
+      purchased[i] = false;
+    }
+    const sd = shopDivs[i];
+    sd.style.backgroundColor = purchased[i] ? "#6F6" : i === shopIndex ? "#480" : "#222";
+    sd.style.outline = i === shopIndex ? "4px solid green" : "";
+    sd.style.display = i > s.length - (!upgrades.bow ? 1 : 0) ? "none" : "";
+    sd.innerText = i===s.length ? "Exit" : !s[i] ? "" : `${s[i].title} ${purchased[i] ? "✔️" : !s[i].cost[0] ? "" : `(Cost: ${s[i].cost[0]*costMul} 🏵️)`}\n${evaluate(s[i].description, s[i])}`;
+  }
+  // if (refresh) {
+  //   showText(evaluate(shopList[shopIndex].description, shopList[shopIndex]));
+  // }
+}
+//window.showShop = showShop;
+
+
+
 let nearHut = null;
 
 let inHut = null;
@@ -905,10 +1096,12 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
             }
           
 
-            health = defaultmaxHealth + upgrades.maxHealth * 2;
+//            health = defaultmaxHealth + upgrades.maxHealth * 2;
             showMeTheMoney();
             // showHealth();
-            showGameOver();
+            //showGameOver();
+            wildHordeMusic.stop();
+            showShop();
           }
         } else {
           shakeSize = 20;
@@ -955,7 +1148,43 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
   return tree;
 });
 
-//let borte = {...sprite, sprites: [], animation: "borte", color: "white"};
+function findBorte() {
+  foundBorte = now();
+  borte.x = hero.x;
+  borte.y = hero.y;
+  wildHordeMusic = furEliseMusic;
+}
+window.findBorte = findBorte;
+
+let borte = {...sprite,
+  borte: true,
+  foeColor: "red",
+  active: () => foundBorte,//upgrades.borte,
+  shootPeriod: 1000,
+  process: sprite => {
+  if (!sprite.parent || !evaluate(sprite.active, sprite)) {
+    return;
+  }
+  const ddx = hero.x - sprite.x;
+  const ddy = hero.y - sprite.y;
+  const dd = Math.sqrt(ddx * ddx + ddy * ddy);
+  if(dd > 300) {
+    sprite.ax = (ddx) * .01;
+    sprite.ay = (ddy) * .01;  
+  } else {
+    sprite.ax = 0;
+    sprite.ay = 0;
+  }
+  if (sprite.time > sprite.nextShot) {
+    shootArrow(sprite);
+    sprite.nextShot = sprite.time + evaluate(sprite.shootPeriod, sprite);
+  }
+
+  repeatDt(processMovement, sprite);
+  sprite.orientation = Math.sign(sprite.dx ?? 1) * 2;
+  },
+  archerOrientation: sprite => Math.sign(sprite.dx || 1),
+};
 
 let hutLevel = 0;
 function hutInfo(sprite) {
@@ -980,7 +1209,7 @@ function closestHut() {
   return best;
 }
 
-const elements = [[hero], foes, corpses, trees];
+const elements = [[hero, borte], foes, corpses, trees];
 
 let indic = null;
 
