@@ -125,7 +125,7 @@ function repeatString(s, num) {
 
 let bowshop;
 const shop = [
-  bowshop = { name: "bow", title: "bow and arrows", description: "(Recommended) To shoot down enemies and collect 🏵️", cost: [0], buy },
+  bowshop = { name: "bow", title: "bow and arrows", description: "(Recommended) Press Space to shoot down enemies and collect 🏵️", cost: [0], buy },
   { name: "speed", title: "speed", description: () => `Change hoof for faster horse (${repeatString("⭐", upgrades.speed + 1)})`, cost: [0,2,3], buy},
   { name: "speedWhileShooting", title: "stable aim", description: "Stabilize bow to shoot without slow down the horse", cost: [2], req: "bow", buy},
   { name: "maxHealth", title: "max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [2, 3, 4], buy: item => {
