@@ -50,10 +50,11 @@ dadd("keydown", (e) => {
     if (keys.KeyS || keys.ArrowDown)
       shopIndex = Math.min(s.length - (bowLess ? 1 : 0), shopIndex + 1);
     if (keys.Space) {
+//      console.log(purchased, shopIndex)
       if (shopIndex === s.length) {
         closing = doneShopping();
       } else if (!purchased[shopIndex]) {
-        const shopItem = [...shop].filter(canBuy)[shopIndex];
+        const shopItem = shopList[shopIndex];
         if (shopItem) {
           purchased[shopIndex] = true;
           money -= shopItem.cost[0] * costMul;
@@ -114,9 +115,7 @@ let startTime = 0;
 function buy(item) {
   // icons.push("+"+item.name);
   upgrades[item.name]++;
-  if (!item.recurring) {
-    item.cost.shift();
-  }
+  item.cost.shift();
 }
 
 function repeatString(s, num) {
@@ -130,7 +129,7 @@ const shop = [
   { name: "speedWhileShooting", title: "stable aim", description: "Stabilize bow to shoot without slow down the horse", cost: [2], req: "bow", buy},
   { name: "maxHealth", title: "max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [2, 3, 4], buy: item => {
     buy(item);
-    health = Math.min(defaultmaxHealth + upgrades.maxHealth * 2, health + 1);
+    health = Math.min(defaultmaxHealth + upgrades.maxHealth * 2, health + 2);
   }},
   { name: "shield", title: "shield", description: () => `This shield blocks one hit. Re-usable after ${20 / (upgrades.shield+1)}s`, cost: [2, 4], buy},
   // { name: "reflect", cost: [2, 4], req: "shield"},
@@ -140,12 +139,12 @@ const shop = [
   { name: "giantPiercing", title: "giant piercing", description: () => `Sharpened arrows increases chance of killing a giant to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy},
   { name: "treeNav", title: "forest navigation", description: () => `A compass to help navigate in the forest (${repeatString("⭐", upgrades.treeNav + 1)})`, cost: [1, 2, 3], buy},
   { name: "control", title: "horse control", description: () => `Improved saddle for better control (${repeatString("⭐", upgrades.control + 1)})`, cost: [1, 2, 3], buy},
-  { name: "time", title: "extra time", description: "In exchange of 🏵️, I will delay the boat (+15s)", recurring: 1, cost: [.5], buy: () => {
+  { name: "time", title: "extra time", description: "In exchange of 🏵️, I will delay the boat (+15s)", cost: [.5,1,2,4,6,8,10], buy: () => {
     startTime += 15000;
     showMeTheMoney();
     showText("This will give you a bit more time.");
   }},
-  { name: "health", title: "rejuvinate", description: "Drink kumis, restore ❤️ to max", recurring: 1, cost: [1], buy: () => {
+  { name: "health", title: "rejuvinate", description: "Drink kumis, restore ❤️ to max", cost: [1,2,4,6,8,10], buy: () => {
     health = defaultmaxHealth + upgrades.maxHealth * 2;
     showMeTheMoney();
     // showText("This ale should give you energy to go on!");
@@ -153,7 +152,7 @@ const shop = [
   { name: "gamble", title: "gamble", description: shopItem => 
       `Play a game of Shagai. (30% chance to double your 🏵️)`,
       // `30% chance to double your 🏵️`,
-      reccurring: 1, cost: [.5], buy: () => {
+      cost: [.5, 1, 2, 3, 4, 5], buy: () => {
     if (rando() <= .35) {
       money += costMul;
       money *= 2;
@@ -163,9 +162,18 @@ const shop = [
       showText("You lost, my friend");
     }
   }},
-  // { name: "shuffle", title: "Re-shuffle", description: "Get another merchant. Resets all shop items", reccurring: 1, cost: [.25], buy: () => {
+  // { name: "shuffle", title: "Re-shuffle", description: "Get another merchant. Resets all shop items", cost: [.25], buy: () => {
   //   showText("I'll get you someone");
   //   showShop(true);
+  // }},
+  // { name: "shortcut", title: "shortcut", description: "Get closer to finding Börte", cost: [4],
+  //   disabled: () => !canShortcut,
+  //   buy: () => {
+  //   if (canShortcut) {
+  //     onExit?.();
+  //     hutInfo(inHut).level = hutLevel++;
+  //     onExit = hutUpgrades[Math.min(hutLevel, hutUpgrades.length - 1)]?.();        
+  //   }
   // }},
 ];
 let upgrades = {...Object.fromEntries(shop.map(item => [item.name, 0])), borte: 0};
@@ -179,6 +187,13 @@ function showText(text) {
 }
 
 const merchantText = "Börte is in another hut.";
+const standardLevelUp = () => {
+  foesTotal += 10;
+  soldierSuperSpeed += .25;
+  showText(merchantText);
+};
+//let canShortcut = true;
+
 const hutUpgrades = [
   () => {},
   () => {
@@ -196,39 +211,20 @@ const hutUpgrades = [
     soldierSuperSpeed += .1;
     showText(merchantText);
   },
-  () => {
-//    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    foesTotal = 50;
-    soldierSuperSpeed += .2;
-    showText(merchantText);
-  },
-  () => {
-    // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    foesTotal = 60;
-    soldierSuperSpeed += .1;
-    showText(merchantText);
-  },
-  () => {
-    // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    foesTotal = 70;
-    showText(merchantText);
-  },
-  () => {
-    // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    foesTotal = 80;
-    soldierSuperSpeed += .1;
-    showText(merchantText);
-  },
+  standardLevelUp,
+  standardLevelUp,
+  standardLevelUp,
   () => {
     // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 100;
-    soldierSuperSpeed += .1;
+    soldierSuperSpeed += .3;
     // const now = Math.max(inHut ? inHut.enteredHut : (screenPaused || lastframeTime), 0);
     const previousMusic = wildHordeMusic;
     findBorte();
 //    foundBorte = now();
     // upgrades.borte = now;
     showText(`Börte is found, alive and well.\nBörte: "Took you long enough! Jamukha escaped. Let's go after him, I'll ride with you."`);
+//    canShortcut = false;
     return () => previousMusic.stop();
   },
 //   () => {
@@ -243,7 +239,8 @@ const hutUpgrades = [
     showText(`Level ${hutLevel}\nBörte found Jamukha and took her revenge.\n\nCongratulations! You beat the game. Feel free keep going, see how far you go.`);
     // gameOverDiv.textContent = `Level ${hutLevel}\n.(You beat the game, but can keep going)`;
     foesTotal = Math.min(foesTotal + 50, 400);
-    soldierSuperSpeed += .1;
+    soldierSuperSpeed += .3;
+    //canShortcut = false;
   },
 ];
 let soldierSuperSpeed = .7;
@@ -311,7 +308,7 @@ gods.left = canvas.offsetLeft + 150;
 showText("");
 function showGameOver() {
   wildHordeMusic.stop();
-  showText("GAME OVER, KHAN" + (canContinue() ? "\nESC to continue. You will lose your money and one upgrade." : ""));
+  showText("GAME OVER, KHAN" + (canContinue() ? "\nESC to revive. You will lose your money and one upgrade." : ""));
 }
 
 function load_binary_resource(url) {
@@ -501,7 +498,6 @@ const sprite = {
       // }
     }
     if (!health && keys.Escape && canContinue()) {
-      health = defaultmaxHealth + upgrades.maxHealth * 2;
       money = 0;
       hero.dead = 0;
       // showText("");
@@ -512,6 +508,7 @@ const sprite = {
       upgrades[upgrade]--;
       showText("You lost " + shop.filter(s => s.name === upgrade)[0].title.toUpperCase());
       //icons.push("-"+upgrade);
+      health = defaultmaxHealth + upgrades.maxHealth * 2;
       if (upgrade === "bow") {
         bowshop.cost.push(0);
       }
