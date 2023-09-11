@@ -131,7 +131,7 @@ const shop = [
     buy(item);
     health = Math.min(defaultmaxHealth + upgrades.maxHealth * 2, health + 2);
   }},
-  { name: "shield", title: "shield", description: () => `This shield blocks one hit. Re-usable after ${20 / (upgrades.shield+1)}s`, cost: [2, 4], buy},
+  { name: "shield", title: "shield", description: () => `This shield blocks one hit. Re-usable after ${20 / (upgrades.shield+1)}s`, cost: [1.5, 3], buy},
   // { name: "reflect", cost: [2, 4], req: "shield"},
   { name: "quickShot", title: "quickshot", description: "Learn skill. Shoot immediately after one hit", cost: [2], req: "bow", buy},
   { name: "money", title: "pillage", description: () => `Earn knowledge of finding loot. Each kill provides more 🏵️ (x${2 + upgrades.money})`, cost: [1, 2, 3], req: "bow", buy},
