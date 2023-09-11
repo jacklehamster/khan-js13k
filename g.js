@@ -7,10 +7,13 @@ const disto = (dx, dy) => Math.sqrt(dx*dx+dy*dy);
 dadd("DOMContentLoaded", () => { 
   q("body").style.backgroundColor = "#100";
 setTimeout(() => {
+  let gTime;
+
+  //let icons = [];
 let canvas = q("canvas"); let ctx=canvas.getContext("2d");
 let cs = canvas.style;
-canvas.width = 2000; cs.width = `${canvas.width/2}px`;
-canvas.height = 1200; cs.height = `${canvas.height/2}px`;
+let cvw = canvas.width = 2000; cs.width = `${cvw/2}px`;
+let cvh = canvas.height = 1200; cs.height = `${cvh/2}px`;
 cs.border = "1px solid black";
 cs.backgroundColor = "#efd";
 setTimeout(() => cs.opacity = 1, 1000);
@@ -109,6 +112,7 @@ let startTime = 0;
 // };
 
 function buy(item) {
+  // icons.push("+"+item.name);
   upgrades[item.name]++;
   if (!item.recurring) {
     item.cost.shift();
@@ -121,32 +125,32 @@ function repeatString(s, num) {
 
 let bowshop;
 const shop = [
-  bowshop = { name: "bow", title: "Bow and arrows", description: "(Recommended) To shoot down enemies and collect 🏵️", cost: [0], buy },
-  { name: "speed", title: "Speed boost", description: () => `Change hoof for faster horse (${repeatString("⭐", upgrades.speed + 1)})`, cost: [0,2,3], buy},
-  { name: "speedWhileShooting", title: "Stable aim", description: "Stabilize bow to shoot without slow down the horse", cost: [2], req: "bow", buy},
-  { name: "maxHealth", title: "Max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [2, 3, 4], buy: item => {
+  bowshop = { name: "bow", title: "bow and arrows", description: "(Recommended) To shoot down enemies and collect 🏵️", cost: [0], buy },
+  { name: "speed", title: "speed", description: () => `Change hoof for faster horse (${repeatString("⭐", upgrades.speed + 1)})`, cost: [0,2,3], buy},
+  { name: "speedWhileShooting", title: "stable aim", description: "Stabilize bow to shoot without slow down the horse", cost: [2], req: "bow", buy},
+  { name: "maxHealth", title: "max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [2, 3, 4], buy: item => {
     buy(item);
     health = Math.min(defaultmaxHealth + upgrades.maxHealth * 2, health + 1);
   }},
-  { name: "shield", title: "Shield", description: () => `This shield blocks one hit. Re-usable after ${20 / (upgrades.shield+1)}s`, cost: [2, 4], buy},
+  { name: "shield", title: "shield", description: () => `This shield blocks one hit. Re-usable after ${20 / (upgrades.shield+1)}s`, cost: [2, 4], buy},
   // { name: "reflect", cost: [2, 4], req: "shield"},
-  { name: "quickShot", title: "Quick shot", description: "Learn a skill to shoot immediately after one hit", cost: [2], req: "bow", buy},
-  { name: "money", title: "Pillage", description: () => `Earn knowledge of finding loot. Each kill provides more 🏵️ (x${2 + upgrades.money})`, cost: [1, 2, 3], req: "bow", buy},
-  { name: "rickoShot", title: "Rickoshot", description: () => `Learn a skill. Arrow aimed properly has +${30 * (upgrades.rickoShot + 1)}% chance to rickochet after hitting.`, cost: [1, 2, 3], req: "bow", buy},
-  { name: "giantPiercing", title: "Giant piercing", description: () => `Sharpened arrows increases chance of killing a giant to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy},
-  { name: "treeNav", title: "Forest navigation", description: () => `A compass to help navigation in forest (${repeatString("⭐", upgrades.treeNav + 1)})`, cost: [1, 2, 3], buy},
-  { name: "control", title: "Horse control", description: () => `Improved saddle for better control (${repeatString("⭐", upgrades.control + 1)})`, cost: [1, 2, 3], buy},
-  { name: "time", title: "Extra time", description: "In exchange of 🏵️, I will delay the boat (+15s)", recurring: 1, cost: [.5], buy: () => {
+  { name: "quickShot", title: "quickshot", description: "Learn skill. Shoot immediately after one hit", cost: [2], req: "bow", buy},
+  { name: "money", title: "pillage", description: () => `Earn knowledge of finding loot. Each kill provides more 🏵️ (x${2 + upgrades.money})`, cost: [1, 2, 3], req: "bow", buy},
+  { name: "rickoShot", title: "rickoshot", description: () => `Learn skill. Arrow aimed properly has +${30 * (upgrades.rickoShot + 1)}% chance to rickochet after hitting.`, cost: [1, 2, 3], req: "bow", buy},
+  { name: "giantPiercing", title: "giant piercing", description: () => `Sharpened arrows increases chance of killing a giant to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy},
+  { name: "treeNav", title: "forest navigation", description: () => `A compass to help navigate in the forest (${repeatString("⭐", upgrades.treeNav + 1)})`, cost: [1, 2, 3], buy},
+  { name: "control", title: "horse control", description: () => `Improved saddle for better control (${repeatString("⭐", upgrades.control + 1)})`, cost: [1, 2, 3], buy},
+  { name: "time", title: "extra time", description: "In exchange of 🏵️, I will delay the boat (+15s)", recurring: 1, cost: [.5], buy: () => {
     startTime += 15000;
     showMeTheMoney();
     showText("This will give you a bit more time.");
   }},
-  { name: "health", title: "Rejuvinate", description: "Drink kumis, restore ❤️ to max", recurring: 1, cost: [1], buy: () => {
+  { name: "health", title: "rejuvinate", description: "Drink kumis, restore ❤️ to max", recurring: 1, cost: [1], buy: () => {
     health = defaultmaxHealth + upgrades.maxHealth * 2;
     showMeTheMoney();
     // showText("This ale should give you energy to go on!");
   }},
-  { name: "gamble", title: "Gamble", description: shopItem => 
+  { name: "gamble", title: "gamble", description: shopItem => 
       `Play a game of Shagai. (30% chance to double your 🏵️)`,
       // `30% chance to double your 🏵️`,
       reccurring: 1, cost: [.5], buy: () => {
@@ -307,7 +311,7 @@ gods.left = canvas.offsetLeft + 150;
 showText("");
 function showGameOver() {
   wildHordeMusic.stop();
-  showText("GAME OVER, KHAN" + (canContinue() ? "\nESC to continue. You will lose all money and one upgrade." : ""));
+  showText("GAME OVER, KHAN" + (canContinue() ? "\nESC to continue. You will lose your money and one upgrade." : ""));
 }
 
 function load_binary_resource(url) {
@@ -386,16 +390,18 @@ function moveTo(ctx, offsetX, offsetY, x, y, penDown, w, h, ddy, random) {
 const threshold = .5;
 
 function removeArrow(index) {
-  arrows[index].x = arrows[arrowSize - 1].x;
-  arrows[index].y = arrows[arrowSize - 1].y;
-  arrows[index].dx = arrows[arrowSize - 1].dx;
-  arrows[index].dy = arrows[arrowSize - 1].dy;
-  arrows[index].born = arrows[arrowSize - 1].born;
+  const to = arrows[index];
+  const from = arrows[arrowSize - 1];
+  to.x = from.x;
+  to.y = from.y;
+  to.dx = from.dx;
+  to.dy = from.dy;
+  to.born = from.born;
   arrowSize--;
 }
 
 function hasShield(hero) {
-  return upgrades.shield && hero.time - (hero.lastBlock??-20000) > (upgrades.shield === 2 ? 10000 : 20000);
+  return upgrades.shield && gTime - (hero.lastBlock??-20000) > (upgrades.shield === 2 ? 10000 : 20000);
 }
 
 let arrowSize = 0;
@@ -410,7 +416,7 @@ function shootArrow(sprite) {
   arr.dy = - 5 + dy * 10;
   arr.x = x + arr.dx;
   arr.y = y - 80 * zoom;
-  arr.born = sprite.time;
+  arr.born = gTime;
   arrowSize++;
 }
 
@@ -498,12 +504,14 @@ const sprite = {
       health = defaultmaxHealth + upgrades.maxHealth * 2;
       money = 0;
       hero.dead = 0;
-      showText("");
+      // showText("");
       startTime = Math.max(startTime, now() - timeLimit * 1000 + 60000);
       // showHealth();
       wildHordeMusic.play();
       const upgrade = Object.keys(upgrades).filter(k => upgrades[k]).sort(() => rando() - .5)[0];
       upgrades[upgrade]--;
+      showText("You lost " + shop.filter(s => s.name === upgrade)[0].title.toUpperCase());
+      //icons.push("-"+upgrade);
       if (upgrade === "bow") {
         bowshop.cost.push(0);
       }
@@ -515,17 +523,17 @@ const sprite = {
 
     repeatDt(processMovement, sprite);
     if (locked) {
-      sprite.x = Math.max(-canvas.width / 2, Math.min(sprite.x, canvas.width / 2));
-      sprite.y = Math.max(-canvas.height / 2, Math.min(sprite.y, canvas.height / 2));
+      sprite.x = Math.max(-cvw / 2, Math.min(sprite.x, cvw / 2));
+      sprite.y = Math.max(-cvh / 2, Math.min(sprite.y, cvh / 2));
     }
 
     const shooting = evaluate(sprite.shooting, sprite);
     if (!shooting) {
       sprite.archerOrientation = sprite.orientation;
     } else if (upgrades.bow) {
-      if (sprite.time > sprite.nextShot) {
+      if (gTime > sprite.nextShot) {
         shootArrow(sprite);
-        sprite.nextShot = sprite.time + evaluate(sprite.shootPeriod, sprite);
+        sprite.nextShot = gTime + evaluate(sprite.shootPeriod, sprite);
       }
     }
   },
@@ -662,8 +670,7 @@ function evaluate(value, sprite) {
   return typeof(value) === "function" ? value(sprite) : value;
 }
 
-function showSprite(sprite, time, dt, accumulator) {
-  sprite.time = time;
+function showSprite(sprite, accumulator) {
   const sprites = evaluate(sprite.sprites, sprite);
   sprites.forEach(sprite => {
     const { x, y, width, height, hotspot, foeIndex, dead, color, foeColor, superSoldier, hidden, tree, active } = sprite;
@@ -674,7 +681,7 @@ function showSprite(sprite, time, dt, accumulator) {
     const top = y - hotspot[1] * height - sh[1];
     const right = left + width;
     const bottom = top + height;
-    if (right < 0 || bottom < 0 || left > canvas.width || top > canvas.height) {
+    if (right < 0 || bottom < 0 || left > cvw || top > cvh) {
       return;
     }
     if (foeIndex !== undefined && !dead) {
@@ -684,8 +691,8 @@ function showSprite(sprite, time, dt, accumulator) {
           const hit = superSoldier ? rando() < (.05 + (.2 * upgrades.giantPiercing)) : true;
           const hitFoe = foes[foeIndex];
           if (hit) {
-            hitFoe.dead = time;    
-            addCorpse(hitFoe, time, arrow.dx, foeColor ?? color);
+            hitFoe.dead = gTime;    
+            addCorpse(hitFoe, arrow.dx, foeColor ?? color);
   
             const gx = hero.x - hitFoe.x;
             const gy = hero.y - hitFoe.y;
@@ -697,7 +704,7 @@ function showSprite(sprite, time, dt, accumulator) {
             hitFoe.goal[1] = hitFoe.y + -gy * gdisto;  
             const bonus = (superSoldier ? 40 : 8) * (1 + upgrades.money);
             bubbles.add({
-              born: time,
+              born: gTime,
               bonus,
               x: hitFoe.x,
               y: hitFoe.y,
@@ -705,7 +712,7 @@ function showSprite(sprite, time, dt, accumulator) {
             money += bonus;
             showMeTheMoney();
           } else {
-            hitFoe.hitTime = time;
+            hitFoe.hitTime = gTime;
           }
 
           if (rando() < upgrades.rickoShot * .3) {
@@ -715,7 +722,7 @@ function showSprite(sprite, time, dt, accumulator) {
             removeArrow(i);
           }
           if (upgrades.quickShot) {
-            hero.nextShot = time + 50;
+            hero.nextShot = gTime + 50;
           }
         }
       }  
@@ -741,7 +748,7 @@ function showSprite(sprite, time, dt, accumulator) {
 const cacheBox = {};
 
 function display(s) {
-    let { x, y, width, height, animation, horseFrame, range, hotspot, color, time, hitTime, dead, direction, dy, random, hidden, cache, hero, hut } = s;
+    let { x, y, width, height, animation, horseFrame, range, hotspot, color, hitTime, direction, dy, random, hidden, cache, hero, hut } = s;
     // if (dead) {
     //   color = "red";
     //   return;
@@ -749,8 +756,7 @@ function display(s) {
     if (hut && !hutInfo(s).closed) {
       nearHut = s;
     }
-    
-    if (hitTime && time - hitTime < 50) {
+    if (hitTime && gTime - hitTime < 100) {
       color = hero ? "red" : "white";
     }
     let frame = range[0] + (range.length <= 1 ? 0 : Math.floor(horseFrame) % (range[1] - range[0] + 1));
@@ -773,9 +779,7 @@ function display(s) {
       if (!cacheBox[tag]) {
 //        console.log(tag);
         canvas = document.createElement("canvas");
-        cacheBox[tag] = {
-          canvas,
-        };
+        cacheBox[tag] = {canvas};
         canvas.width = width;
         canvas.height = height;
         canvas.getContext("2d").lineWidth = 6;
@@ -829,7 +833,7 @@ let shakeSize = 0;
 
 const corpses = [];
 
-function addCorpse(foe, time, dx, color) {
+function addCorpse(foe, dx, color) {
   const corpse = {
     ...copy(sprite),
     corpse: true,
@@ -841,10 +845,10 @@ function addCorpse(foe, time, dx, color) {
     archerOrientation: dx < 0 ? 1 : -1,
     cache: true,
     riderAnimation: "dead",
-    born: time,
+    born: gTime,
     color,
     process: (sprite) => {
-      const ft = sprite.time - sprite.born;
+      const ft = gTime - sprite.born;
       const frame = Math.floor(ft / 50);
 //      console.log(ft);
       const endFrame = evaluate(sprite.rangeOverride[1], sprite);
@@ -862,15 +866,15 @@ function addCorpse(foe, time, dx, color) {
   corpses.push(corpse);
   return corpse;
 }
-function lifeCheck () {
+function lifeCheck() {
   shakeSize = 40;
   setTimeout(() => {
     cs.backgroundColor = "#efd";
   }, 150);
 
   if (!health) {
-    addCorpse(hero, hero.time, (hero.x - sprite.x) * 2, hero.color);
-    hero.dead = hero.time;
+    addCorpse(hero, (hero.x - sprite.x) * 2, hero.color);
+    hero.dead = gTime;
     showGameOver();
     wildHordeMusic.stop();
   }
@@ -923,7 +927,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
       if (!sprite.parent || !evaluate(sprite.active, sprite)) {
         return;
       }
-      if (sprite.dead && sprite.time - sprite.dead > 5000) {
+      if (sprite.dead && gTime - sprite.dead > 5000) {
         sprite.dead = 0;
 
         sprite.speed = sprite.soldier ? Math.max(.025, rando() / 30) : Math.max(.03, rando() / 20);
@@ -938,7 +942,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
       const hdist = disto(hx, hy);// Math.sqrt(hx * hx + hy * hy);
       if (hdist < 50 && !sprite.dead && health) {
         if (hasShield(hero)) {
-          hero.lastBlock = hero.time;
+          hero.lastBlock = gTime;
         } else {
           cs.backgroundColor = "#a00";
           health = Math.max(0, health - (superSoldier ? 2 : 1));
@@ -959,7 +963,8 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
         sprite.y = hero.y + sin * 2000;
         hero.dx = 0;
         hero.dy = 0;
-        hero.hitTime = hero.time;
+        console.log(gTime);
+        hero.hitTime = gTime;
 
       }
 
@@ -968,9 +973,9 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
           sprite.pausing = true;
           const dx = sprite.x - (nearHut ?? hero).x;
           const dy = sprite.y - (nearHut ?? hero).y;
-          const dist = disto(dx, dy);// Math.sqrt(dx * dx + dy * dy);
-          sprite.goal[0] = hero.x + dx / dist * 2000;
-          sprite.goal[1] = hero.y + dy / dist * 2000;        
+          const gd = 2000 / disto(dx, dy);// Math.sqrt(dx * dx + dy * dy);
+          sprite.goal[0] = hero.x + dx * gd;
+          sprite.goal[1] = hero.y + dy * gd;        
         }
       } else {
         if (sprite.pausing) {
@@ -1020,15 +1025,17 @@ function canBuy(item) {
 }
 
 const shopDiv = document.body.appendChild(document.createElement("div"));
-shopDiv.style.position = "absolute";
-shopDiv.style.left = "200px";
-shopDiv.style.top = "200px"
-shopDiv.style.display = "none";
+const sds = shopDiv.style;
+sds.position = "absolute";
+sds.left = "200px";
+sds.top = "200px"
+sds.display = "none";
 const shopDivs = new Array(5).fill(null).map(() => {
   const s = shopDiv.appendChild(document.createElement("div"));
-  s.style.backgroundColor = "#444";
-  s.style.margin = "20px 10px";
-  s.style.padding = "10px";
+  const ssd = s.style;
+  ssd.backgroundColor = "#444";
+  ssd.margin = "10px";
+  ssd.padding = "20px 10px";
   return s;
 });
 
@@ -1062,7 +1069,7 @@ function showShop(refresh) {
     sd.style.display = i > s.length - (!upgrades.bow ? 1 : 0) ? "none" : "";
     sd.style.opacity = i===s.length || s[i] && canBuy(s[i]) || purchased[i] ? 1 : .5;
     sd.style.color = purchased[i] ? "green" : "";
-    sd.innerText = i===s.length ? "Exit" : !s[i] ? "" : `${s[i].title} ${purchased[i] ? "✔️" : !s[i].cost[0] ? "" : `(Cost: ${s[i].cost[0]*costMul} 🏵️)`}\n${evaluate(s[i].description, s[i])}`;
+    sd.innerText = i===s.length ? "Exit" : !s[i] ? "" : `${s[i].title.toUpperCase()} ${purchased[i] ? "✔️" : !s[i].cost[0] ? "" : `(Cost: ${s[i].cost[0]*costMul} 🏵️)`}\n${evaluate(s[i].description, s[i])}`;
   }
   // if (refresh) {
   //   showText(evaluate(shopList[shopIndex].description, shopList[shopIndex]));
@@ -1109,7 +1116,7 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
         if (isHut && !hutInfo(sprite).closed) {
           if (!inHut) {
             inHut = sprite;
-            sprite.enteredHut = sprite.time;
+            sprite.enteredHut = gTime;
 
             if (!hutInfo(inHut).level) {
               hutInfo(inHut).level = hutLevel++;
@@ -1190,15 +1197,15 @@ let borte = {...sprite,
   const ddy = hero.y - sprite.y;
   const dd = disto(ddx, ddy);// Math.sqrt(ddx * ddx + ddy * ddy);
   if(dd > 300) {
-    sprite.ax = (ddx) * .01;
-    sprite.ay = (ddy) * .01;  
+    sprite.ax = ddx * .01;
+    sprite.ay = ddy * .01;  
   } else {
     sprite.ax = 0;
     sprite.ay = 0;
   }
-  if (sprite.time > sprite.nextShot) {
+  if (gTime > sprite.nextShot) {
     shootArrow(sprite);
-    sprite.nextShot = sprite.time + evaluate(sprite.shootPeriod, sprite);
+    sprite.nextShot = gTime + evaluate(sprite.shootPeriod, sprite);
   }
 
   repeatDt(processMovement, sprite);
@@ -1245,6 +1252,7 @@ function loop(time) {
   //   return;
   // }
   lastframeTime = Math.max(lastframeTime, time - 100);
+  gTime = time;
   if (screenPaused) {
     return;
   }
@@ -1261,7 +1269,7 @@ function loop(time) {
     }
   }
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, cvw, cvh);
 
   repeatDt(moveArrows, arrows);
 
@@ -1298,7 +1306,7 @@ function loop(time) {
 
   accumulator.length = 0;
   drawGround(accumulator);
-  elements.forEach(e => e.forEach(s => showSprite(s, time, dt, accumulator)));
+  elements.forEach(e => e.forEach(s => showSprite(s, accumulator)));
   accumulator.sort((a, b) => {
     if (a.layer !== b.layer) {
       return a.layer - b.layer;
@@ -1323,8 +1331,8 @@ function loop(time) {
       const iy = hero.y  + chdy / chdist * ddd - sh[1];
       indic[0] += (ix - indic[0]) * .1;
       indic[1] += (iy - indic[1]) * .1;
-      ctx.arc(Math.min(canvas.width - 80, Math.max(80, indic[0])),
-              Math.min(canvas.height - 80, Math.max(80, indic[1])), 15, 0, 2 * Math.PI);
+      ctx.arc(Math.min(cvw - 80, Math.max(80, indic[0])),
+              Math.min(cvh - 80, Math.max(80, indic[1])), 15, 0, 2 * Math.PI);
       ctx.fill();  
     }  
   }
@@ -1344,25 +1352,23 @@ function loop(time) {
   if (!health) {
     const deathTime = Math.min(.7, (time - hero.dead) / 3000);
     ctx.fillStyle = `rgb(200,0,0,${deathTime})`;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, cvw, cvh);
     ctx.fill();
   } else if (!inHut) {
     if (!locked) {
       headStart += ((hero.dx * hero.archerOrientation < 0 ? 0 : hero.dx) / 2 + hero.archerOrientation - headStart) * .05;
       const dt = 20;
-      sh[0] += dt / 20 * (hero.x - canvas.width/2 - sh[0] + headStart * 80) * .1;
-      sh[1] += dt / 20 * (hero.y - canvas.height/2 - sh[1] + hero.dy * 50) * .1;  
+      sh[0] += dt / 20 * (hero.x - cvw/2 - sh[0] + headStart * 80) * .1;
+      sh[1] += dt / 20 * (hero.y - cvh/2 - sh[1] + hero.dy * 50) * .1;  
     } else {
-      sh[0] =- canvas.width/2;
-      sh[1] = -canvas.height/2;  
+      sh[0] =- cvw/2;
+      sh[1] = -cvh/2;  
     }
   } else {
       const hutTime = Math.min(1, (time - inHut.enteredHut) / 500);
       ctx.fillStyle = `rgb(0,0,0,${hutTime})`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, cvw, cvh);
       ctx.fill();
-      // showSprite(borte, time, dt, accumulator);
-      // accumulator.forEach(s => display(s, time));
     }
 }
 
