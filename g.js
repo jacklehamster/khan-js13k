@@ -1,9 +1,12 @@
 //  BEGINNING
 let q = document.querySelector.bind(document);
-document.addEventListener("DOMContentLoaded", () => { 
+dadd = document.addEventListener;
+const rando = Math.random;
+const disto = (dx, dy) => Math.sqrt(dx*dx+dy*dy);
+
+dadd("DOMContentLoaded", () => { 
   q("body").style.backgroundColor = "#100";
-  q("h3").style.opacity = 1;
-  setTimeout(() => {
+setTimeout(() => {
 let canvas = q("canvas"); let ctx=canvas.getContext("2d");
 let cs = canvas.style;
 canvas.width = 2000; cs.width = `${canvas.width/2}px`;
@@ -15,7 +18,7 @@ setTimeout(() => cs.opacity = 1, 1000);
 const costMul = 200;
 const zoom = .75;
 const keys = {};
-document.addEventListener("keyup", (e) => {
+dadd("keyup", (e) => {
   delete keys[e.code];
 });
 
@@ -27,11 +30,11 @@ function doneShopping() {
   return true;
 }
 
-document.addEventListener("mousemove", () => {
+dadd("mousemove", () => {
   cs.cursor = "";
 });
 
-document.addEventListener("keydown", (e) => {
+dadd("keydown", (e) => {
   keys[e.code] = true;
   cs.cursor = "none";
   if(shopDiv.style.display === "") {
@@ -121,13 +124,16 @@ const shop = [
   bowshop = { name: "bow", title: "Bow and arrows", description: "(Recommended) To shoot down enemies and collect 🏵️", cost: [0], buy },
   { name: "speed", title: "Speed boost", description: () => `Change hoof for faster horse (${repeatString("⭐", upgrades.speed + 1)})`, cost: [0,2,3], buy},
   { name: "speedWhileShooting", title: "Stable aim", description: "Stabilize bow to shoot without slow down the horse", cost: [2], req: "bow", buy},
-  { name: "maxHealth", title: "Max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [2, 3, 4], buy},
+  { name: "maxHealth", title: "Max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [2, 3, 4], buy: item => {
+    buy(item);
+    health = Math.min(defaultmaxHealth + upgrades.maxHealth * 2, health + 1);
+  }},
   { name: "shield", title: "Shield", description: () => `This shield blocks one hit. Re-usable after ${20 / (upgrades.shield+1)}s`, cost: [2, 4], buy},
   // { name: "reflect", cost: [2, 4], req: "shield"},
   { name: "quickShot", title: "Quick shot", description: "Learn a skill to shoot immediately after one hit", cost: [2], req: "bow", buy},
   { name: "money", title: "Pillage", description: () => `Earn knowledge of finding loot. Each kill provides more 🏵️ (x${2 + upgrades.money})`, cost: [1, 2, 3], req: "bow", buy},
   { name: "rickoShot", title: "Rickoshot", description: () => `Learn a skill. Arrow aimed properly has +${30 * (upgrades.rickoShot + 1)}% chance to rickochet after hitting.`, cost: [1, 2, 3], req: "bow", buy},
-  { name: "giantPiercing", title: "Giant piercing", description: () => `Sharpened arrows increases chance of killing a giant from ${5 + 20 * (upgrades.giantPiercing)}% to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy},
+  { name: "giantPiercing", title: "Giant piercing", description: () => `Sharpened arrows increases chance of killing a giant to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy},
   { name: "treeNav", title: "Forest navigation", description: () => `A compass to help navigation in forest (${repeatString("⭐", upgrades.treeNav + 1)})`, cost: [1, 2, 3], buy},
   { name: "control", title: "Horse control", description: () => `Improved saddle for better control (${repeatString("⭐", upgrades.control + 1)})`, cost: [1, 2, 3], buy},
   { name: "time", title: "Extra time", description: "In exchange of 🏵️, I will delay the boat (+15s)", recurring: 1, cost: [.5], buy: () => {
@@ -135,16 +141,16 @@ const shop = [
     showMeTheMoney();
     showText("This will give you a bit more time.");
   }},
-  { name: "health", title: "Rejuvinate", description: "Drink kumis, restore health to max", recurring: 1, cost: [1], buy: () => {
+  { name: "health", title: "Rejuvinate", description: "Drink kumis, restore ❤️ to max", recurring: 1, cost: [1], buy: () => {
     health = defaultmaxHealth + upgrades.maxHealth * 2;
     showMeTheMoney();
-    showText("This ale should give you energy to go on!");
+    // showText("This ale should give you energy to go on!");
   }},
   { name: "gamble", title: "Gamble", description: shopItem => 
-      `Play a game of Shagai.(30% chance to double your 🏵️)`,
+      `Play a game of Shagai. (30% chance to double your 🏵️)`,
       // `30% chance to double your 🏵️`,
       reccurring: 1, cost: [.5], buy: () => {
-    if (Math.random() <= .35) {
+    if (rando() <= .35) {
       money += costMul;
       money *= 2;
       showMeTheMoney();
@@ -159,8 +165,8 @@ const shop = [
   // }},
 ];
 let upgrades = {...Object.fromEntries(shop.map(item => [item.name, 0])), borte: 0};
-window.shop = shop;
-window.upgrades = upgrades;
+//window.shop = shop;
+//window.upgrades = upgrades;
 
 function showText(text) {
   gameOverDiv.style.display = text.length ? "" : "none";
@@ -168,12 +174,12 @@ function showText(text) {
  
 }
 
-const merchantText = "Börte is in another hut, but I'll sell you some items for 🏵️";
+const merchantText = "Börte is in another hut.";
 const hutUpgrades = [
   () => {},
   () => {
     foesTotal = 20;
-    const text = `Spare my life, Great Khan! I'll help you find Börte.\nHurry! Jamukha plans to send her away on a boat.\nTake one item, then follow the sign.`;
+    const text = `Spare my life, Khan! I'll help you find Börte.\nYou should hurry! Jamukha plans to send her away on a boat.\nTake one item, then follow the sign.`;
     showText(text);
     // for (hutLevel++;hutLevel < hutUpgrades.length; hutLevel++) {
     //     hutUpgrades[hutLevel]?.();
@@ -189,7 +195,7 @@ const hutUpgrades = [
   () => {
 //    gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     foesTotal = 50;
-    soldierSuperSpeed += .1;
+    soldierSuperSpeed += .2;
     showText(merchantText);
   },
   () => {
@@ -229,13 +235,15 @@ const hutUpgrades = [
 //   },
   () => {
     // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-    showText(`Level ${hutLevel}\nBörte found Jamukha and got her revenge. (Congratulations! You beat the game, but feel free keep going)`);
+    beatGame = true;
+    showText(`Level ${hutLevel}\nBörte found Jamukha and took her revenge. (Congratulations! You beat the game, but feel free keep going, see how far you can go)`);
     // gameOverDiv.textContent = `Level ${hutLevel}\n.(You beat the game, but can keep going)`;
     foesTotal = Math.min(foesTotal + 50, 400);
     soldierSuperSpeed += .1;
   },
 ];
 let soldierSuperSpeed = .7;
+let beatGame = false;
 
 const defaultmaxHealth = 6;
 
@@ -249,7 +257,7 @@ let rage = 0;
 // function showHealth() {
 // }
 
-let timeLimit = 60 * 8;
+let timeLimit = 60 * 6;
 
 let foundBorte = 0;
 let money = 0;
@@ -369,9 +377,9 @@ function showFrame(ctx, x, y, w, h, frame, anim, color, ddy, random, debug) {
 
 function moveTo(ctx, offsetX, offsetY, x, y, penDown, w, h, ddy, random) {
   if (penDown) {
-      ctx.lineTo(offsetX + x, offsetY + y + (x/w - .5)*5 * ddy + random * (Math.random() - .5));
+      ctx.lineTo(offsetX + x, offsetY + y + (x/w - .5)*5 * ddy + random * (rando() - .5));
   } else {
-      ctx.moveTo(offsetX + x, offsetY + y + (x/w - .5)*5 * ddy + random * (Math.random() - .5));
+      ctx.moveTo(offsetX + x, offsetY + y + (x/w - .5)*5 * ddy + random * (rando() - .5));
   }
 }
 
@@ -397,11 +405,12 @@ function shootArrow(sprite) {
   if (arrowSize >= arrows.length) {
     arrows.push({});
   }
-  arrows[arrowSize].dx = evaluate(archerOrientation, sprite) * 120 + dx * 2;
-  arrows[arrowSize].dy = - 5 + dy * 10;
-  arrows[arrowSize].x = x + arrows[arrowSize].dx;
-  arrows[arrowSize].y = y - 80 * zoom;
-  arrows[arrowSize].born = sprite.time;
+  const arr = arrows[arrowSize];
+  arr.dx = evaluate(archerOrientation, sprite) * 120 + dx * 2;
+  arr.dy = - 5 + dy * 10;
+  arr.x = x + arr.dx;
+  arr.y = y - 80 * zoom;
+  arr.born = sprite.time;
   arrowSize++;
 }
 
@@ -416,7 +425,7 @@ function processMovement(sprite) {
   const dtt = 0.7;
   const ax = evaluate(sprite.ax, sprite);
   const ay = evaluate(sprite.ay, sprite);
-  const da = Math.sqrt(ax*ax + ay * ay);
+  const da = disto(ax, ay);//Math.sqrt(ax*ax + ay * ay);
   if (ax !== 0) {
     sprite.orientation = ax;
   }
@@ -434,7 +443,7 @@ function processMovement(sprite) {
     sprite.x += sprite.dx * dtt;
     sprite.y += sprite.dy * dtt;
   }
-  const dist = Math.sqrt(sprite.dx * sprite.dx + sprite.dy * sprite.dy);
+  const dist = disto(sprite.dx, sprite.dy);//Math.sqrt(sprite.dx * sprite.dx + sprite.dy * sprite.dy);
   sprite.horseFrame += dtt * Math.max(.08, dist / 50);
 }
 
@@ -462,7 +471,7 @@ function exitHut(hut) {
 }
 
 function canContinue() {
-  return Object.keys(upgrades).filter(k => upgrades[k]).length;
+  return !beatGame && Object.keys(upgrades).filter(k => upgrades[k]).length;
 }
 
 
@@ -493,7 +502,7 @@ const sprite = {
       startTime = Math.max(startTime, now() - timeLimit * 1000 + 60000);
       // showHealth();
       wildHordeMusic.play();
-      const upgrade = Object.keys(upgrades).filter(k => upgrades[k]).sort(() => Math.random() - .5)[0];
+      const upgrade = Object.keys(upgrades).filter(k => upgrades[k]).sort(() => rando() - .5)[0];
       upgrades[upgrade]--;
       if (upgrade === "bow") {
         bowshop.cost.push(0);
@@ -596,7 +605,7 @@ const sprite = {
       color: sprite => hasShield(sprite) && upgrades.shield > 1 ? "gold" : "#69f",
       direction: (sprite) => Math.sign(sprite.orientation),
       frame: () => 0,
-      hidden: sprite => !hasShield(sprite) || sprite.foe || sprite.corpse || sprite.soldier,
+      hidden: sprite => !hasShield(sprite) || sprite.borte || sprite.foe || sprite.corpse || sprite.soldier,
     }, sprite),
     sprite => evaluate({
       ...sprite,
@@ -626,10 +635,10 @@ const sprite = {
         animation: "shield",
         random: 150,
         range: [0],
-        hotspot: [.47 + Math.random() - .5, 5],
+        hotspot: [.47 + rando() - .5, 5],
         width: 200,
         height: 30,
-        color: () => Math.random() < .5 ? "gold" : "red",
+        color: () => rando() < .5 ? "gold" : "red",
         direction: (sprite) => Math.sign(sprite.orientation),
         frame: () => 0,
         active: sprite => sprite.hut && hutInfo(sprite).onFire,
@@ -672,7 +681,7 @@ function showSprite(sprite, time, dt, accumulator) {
       for (let i = arrowSize - 1; i >= 0; i--) {
         const arrow = arrows[i];
         if (arrow.x - sh[0] > left && arrow.x - sh[0] < right && arrow.y - sh[1] > top && arrow.y - sh[1] < bottom) {
-          const hit = superSoldier ? Math.random() < (.05 + (.2 * upgrades.giantPiercing)) : true;
+          const hit = superSoldier ? rando() < (.05 + (.2 * upgrades.giantPiercing)) : true;
           const hitFoe = foes[foeIndex];
           if (hit) {
             hitFoe.dead = time;    
@@ -680,20 +689,27 @@ function showSprite(sprite, time, dt, accumulator) {
   
             const gx = hero.x - hitFoe.x;
             const gy = hero.y - hitFoe.y;
-            const gdist = Math.sqrt(gx*gx + gy*gy);
+            const gdist = disto(gx, gy);//Math.sqrt(gx*gx + gy*gy);
+            let gdisto = 2000 / gdist;
             hitFoe.dx = 0;
             hitFoe.dy = 0;
-            hitFoe.goal[0] = hitFoe.x + -gx / gdist * 2000;
-            hitFoe.goal[1] = hitFoe.y + -gy / gdist * 2000;  
-
-            money += (superSoldier ? 50 : 8) * (1 + upgrades.money);
+            hitFoe.goal[0] = hitFoe.x + -gx * gdisto;
+            hitFoe.goal[1] = hitFoe.y + -gy * gdisto;  
+            const bonus = (superSoldier ? 40 : 8) * (1 + upgrades.money);
+            bubbles.add({
+              born: time,
+              bonus,
+              x: hitFoe.x,
+              y: hitFoe.y,
+            });
+            money += bonus;
             showMeTheMoney();
           } else {
             hitFoe.hitTime = time;
           }
 
-          if (Math.random() < upgrades.rickoShot * .3) {
-            arrow.dx *= (Math.random() - .5);
+          if (rando() < upgrades.rickoShot * .3) {
+            arrow.dx *= (rando() - .5);
             arrow.dy = - Math.abs(arrow.dy)* .8;
           } else {
             removeArrow(i);
@@ -764,6 +780,7 @@ function display(s) {
         canvas.height = height;
         canvas.getContext("2d").lineWidth = 6;
         canvas.getContext("2d").strokeStyle = "black";
+
 // /       document.body.appendChild(cacheBox[tag].canvas);
 
         showFrame(canvas.getContext("2d"), dir < 0 ? width : 0, height < 0 ? -height : 0, width * dir, height, frame, anim, color, 0, 0);
@@ -865,7 +882,7 @@ let foesTotal = 0;
 //  HARD vvvv
 const foesLength = 400;
 const foes = new Array(foesLength).fill(0).map((_, index) => {
-  const angle = Math.random() * Math.PI * 2;
+  const angle = rando() * Math.PI * 2;
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
 
@@ -875,16 +892,16 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
   //   console.log(superSoldier, soldier);    
   // }
 
-  const x = cos * (2000 + Math.random()*1000);
-  const y = sin * (2000 + Math.random()*1000);
-  const mySpeed = soldier ? Math.max(.01, Math.random() / 20) : Math.max(.03, Math.random() / 10);//soldierSuperSpeed
+  const x = cos * (2000 + rando()*1000);
+  const y = sin * (2000 + rando()*1000);
+  const mySpeed = soldier ? Math.max(.01, rando() / 20) : Math.max(.03, rando() / 10);//soldierSuperSpeed
   const foe = {
     ...copy(sprite),
     active: () => index <= foesTotal,
     superSoldier,
     foeIndex: index,
     foeColor: superSoldier ? (soldier ? "blue" : "#a00") : soldier ? "#75f" : "#f0a",
-    horseFrame: Math.floor(Math.random() * 100),
+    horseFrame: Math.floor(rando() * 100),
     goal: [x, y],
     gdist: 0,
     ax: (sprite) => (sprite.goal[0] - foe.x) / 2000,
@@ -909,16 +926,16 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
       if (sprite.dead && sprite.time - sprite.dead > 5000) {
         sprite.dead = 0;
 
-        sprite.speed = sprite.soldier ? Math.max(.025, Math.random() / 30) : Math.max(.03, Math.random() / 20);
+        sprite.speed = sprite.soldier ? Math.max(.025, rando() / 30) : Math.max(.03, rando() / 20);
       }
       repeatDt(processMovement, sprite);
       const gx = sprite.x - sprite.goal[0];
       const gy = sprite.y - sprite.goal[1];
-      sprite.gdist = Math.sqrt(gx * gx + gy * gy);
+      sprite.gdist = disto(gx, gy);// Math.sqrt(gx * gx + gy * gy);
 
       const hx = sprite.x - hero.x;
       const hy = sprite.y - hero.y;
-      const hdist = Math.sqrt(hx * hx + hy * hy);
+      const hdist = disto(hx, hy);// Math.sqrt(hx * hx + hy * hy);
       if (hdist < 50 && !sprite.dead && health) {
         if (hasShield(hero)) {
           hero.lastBlock = hero.time;
@@ -935,7 +952,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
 
         lifeCheck();
 
-        const angle = Math.random() * Math.PI * 2;
+        const angle = rando() * Math.PI * 2;
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
         sprite.x = hero.x + cos * 2000;
@@ -951,7 +968,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
           sprite.pausing = true;
           const dx = sprite.x - (nearHut ?? hero).x;
           const dy = sprite.y - (nearHut ?? hero).y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          const dist = disto(dx, dy);// Math.sqrt(dx * dx + dy * dy);
           sprite.goal[0] = hero.x + dx / dist * 2000;
           sprite.goal[1] = hero.y + dy / dist * 2000;        
         }
@@ -960,28 +977,28 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
           sprite.pausing = false;
         }
         if (hdist > 2500) {
-          if (Math.random() < .6 || (!hero.dx && !hero.dy)) {
-            const angle = Math.random() * Math.PI * 2;
+          if (rando() < .6 || (!hero.dx && !hero.dy)) {
+            const angle = rando() * Math.PI * 2;
             const cos = Math.cos(angle);
             const sin = Math.sin(angle);
             sprite.x = hero.x + cos * 1500;
             sprite.y = hero.y + sin * 1500;  
           } else {
-            const ddd = Math.sqrt(hero.dx * hero.dx + hero.dy * hero.dy);
-            sprite.x = hero.x + hero.dx * (1000 + Math.random() * 500) / ddd + (Math.random() - .5) * 300;
-            sprite.y = hero.y + hero.dy * (1000 + Math.random() * 500) / ddd + (Math.random() - .5) * 300;
+            const ddd = disto(hero.dx, hero.dy);//Math.sqrt(hero.dx * hero.dx + hero.dy * hero.dy);
+            sprite.x = hero.x + hero.dx * (1000 + rando() * 500) / ddd + (rando() - .5) * 300;
+            sprite.y = hero.y + hero.dy * (1000 + rando() * 500) / ddd + (rando() - .5) * 300;
           }
           if (sprite.dead) {
             sprite.dead = 0;
 
-            sprite.speed = sprite.soldier ? Math.max(.025, Math.random() / 30) : Math.max(.03, Math.random() / 20);
+            sprite.speed = sprite.soldier ? Math.max(.025, rando() / 30) : Math.max(.03, rando() / 20);
           }
           sprite.gdist = 0;
         }
 
         if (sprite.gdist < 100 || hdist > (sprite.soldier ? 500 : 3000)) {
-          sprite.goal[0] = hero.x + (hero.x - sprite.x) + (Math.random()-.5) * (sprite.soldier ? 200 : 300);
-          sprite.goal[1] = hero.y + (hero.y - sprite.y) + (Math.random()-.5) * (sprite.soldier ? 200 : 300);
+          sprite.goal[0] = hero.x + (hero.x - sprite.x) + (rando()-.5) * (sprite.soldier ? 200 : 300);
+          sprite.goal[1] = hero.y + (hero.y - sprite.y) + (rando()-.5) * (sprite.soldier ? 200 : 300);
           // if (sprite.dead) {
           //   sprite.dead = false;
           // }
@@ -1027,7 +1044,7 @@ function showShop(refresh) {
       } else if (b.name === "bow") {
         return 1;
       }
-      return Math.random() - .5;
+      return rando() - .5;
     });
     shopList = [...shop].filter(canBuy).slice(0, shopDivs.length-1);
   }
@@ -1039,8 +1056,12 @@ function showShop(refresh) {
     }
     const sd = shopDivs[i];
     sd.style.backgroundColor = purchased[i] ? "#6F6" : i === shopIndex ? "#480" : "#222";
+    sd.style.padding = "10px";
+    sd.style.width = "500px";
     sd.style.outline = i === shopIndex ? "4px solid green" : "";
     sd.style.display = i > s.length - (!upgrades.bow ? 1 : 0) ? "none" : "";
+    sd.style.opacity = i===s.length || s[i] && canBuy(s[i]) || purchased[i] ? 1 : .5;
+    sd.style.color = purchased[i] ? "green" : "";
     sd.innerText = i===s.length ? "Exit" : !s[i] ? "" : `${s[i].title} ${purchased[i] ? "✔️" : !s[i].cost[0] ? "" : `(Cost: ${s[i].cost[0]*costMul} 🏵️)`}\n${evaluate(s[i].description, s[i])}`;
   }
   // if (refresh) {
@@ -1069,8 +1090,8 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
   const tree = {
     ...copy(sprite),
     cache: true,
-    x: isHut ? index * repeatDistance : 1000 + Math.random() * 4000,
-    y: isHut ? index * repeatDistance / 2 : Math.random() * 4000,
+    x: isHut ? index * repeatDistance : 1000 + rando() * 4000,
+    y: isHut ? index * repeatDistance / 2 : rando() * 4000,
     cellX: 0,
     cellY: 0,
     index,
@@ -1082,7 +1103,7 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
       }
       const hx = sprite.x - hero.x;
       const hy = sprite.y - hero.y;
-      const hdist = Math.sqrt(hx * hx + hy * hy);
+      const hdist = disto(hx, hy);// Math.sqrt(hx * hx + hy * hy);
       if (hdist < (isHut ? 80 : 50)) {
 //        console.log("TREE", hdist);
         if (isHut && !hutInfo(sprite).closed) {
@@ -1138,9 +1159,9 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
     },
     foe: true,
     width: (isHut ? 600 : 500) * zoom,
-    height: (isHut ? 400 : 350 + Math.random() * 200) * zoom,
+    height: (isHut ? 400 : 350 + rando() * 200) * zoom,
     riderAnimation: isHut ? "hut" : "tree",
-    foeColor: isHut ? `rgb(${200}, ${100 + index * 55}, ${50 + index * 50})` : `rgb(${Math.random() * 30}, ${Math.random() * 150}, ${Math.random()*20})`,
+    foeColor: isHut ? `rgb(${200}, ${100 + index * 55}, ${50 + index * 50})` : `rgb(${rando() * 30}, ${rando() * 150}, ${rando()*20})`,
     tree: true,
     hut: isHut,
     rangeOverride: isHut ? [1] : undefined,
@@ -1167,7 +1188,7 @@ let borte = {...sprite,
   }
   const ddx = hero.x - sprite.x;
   const ddy = hero.y - sprite.y;
-  const dd = Math.sqrt(ddx * ddx + ddy * ddy);
+  const dd = disto(ddx, ddy);// Math.sqrt(ddx * ddx + ddy * ddy);
   if(dd > 300) {
     sprite.ax = (ddx) * .01;
     sprite.ay = (ddy) * .01;  
@@ -1209,6 +1230,8 @@ function closestHut() {
   return best;
 }
 
+const bubbles = new Set();
+
 const elements = [[hero, borte], foes, corpses, trees];
 
 let indic = null;
@@ -1231,7 +1254,7 @@ function loop(time) {
 
 
   if (shakeSize) {
-    shake = Math.random() * shakeSize;
+    shake = rando() * shakeSize;
     shakeSize *= .5;
     if (shakeSize < .1) {
       shakeSize = 0;
@@ -1246,11 +1269,11 @@ function loop(time) {
   ctx.beginPath();
   ctx.strokeStyle = "#038";
   ctx.lineWidth = 6;
-  const arrdt = .7;
+//  const arrdt = .7;
   for (let i = 0; i < arrowSize; i++) {
     const arrow = arrows[i];
     const arrowlen = 50;
-    const dist = Math.sqrt(arrow.dx * arrow.dx + arrow.dy * arrow.dy) + 1;
+    const dist = disto(arrow.dx, arrow.dy);// Math.sqrt(arrow.dx * arrow.dx + arrow.dy * arrow.dy) + 1;
     ctx.moveTo(
       arrow.x - sh[0],
       arrow.y - sh[1] + shake);
@@ -1259,6 +1282,8 @@ function loop(time) {
       arrow.y - sh[1] + shake - arrow.dy / dist * arrowlen);
   }
   ctx.stroke();
+
+//  ctx.fill();
 
   for (let i = arrowSize - 1; i >= 0; i--) {
     if (time - arrows[i].born > 1500) {
@@ -1287,7 +1312,7 @@ function loop(time) {
   if (ch) {
     const chdx = ch.x - hero.x;
     const chdy = ch.y - hero.y;
-    const chdist = Math.sqrt(chdx*chdx + chdy*chdy);
+    const chdist = disto(chdx, chdy);// Math.sqrt(chdx*chdx + chdy*chdy);
     if (chdist > 2000) {
       if (!indic) {
         indic = [hero.x, hero.y];
@@ -1303,6 +1328,17 @@ function loop(time) {
       ctx.fill();  
     }  
   }
+
+  ctx.font = "28px serif";
+  for (let b of bubbles) {
+    // ctx.fillText("TESTING", 100, 100);
+    const t = time - b.born;
+    ctx.fillText(`+${b.bonus}🏵️`, b.x - sh[0], b.y - sh[1] - t / 50);
+    if (t > 2000) {
+      bubbles.delete(b);
+    }
+  }
+
 
   
   if (!health) {
@@ -1335,10 +1371,11 @@ function moveArrows(arrows) {
   const arrowlen = 50;
   for (let i = 0; i < arrowSize; i++) {
     const arrow = arrows[i];
-    const dist = Math.sqrt(arrow.dx * arrow.dx + arrow.dy * arrow.dy) + 1;
+    const dist = disto(arrow.dx, arrow.dy) + 1;// Math.sqrt(arrow.dx * arrow.dx + arrow.dy * arrow.dy) + 1;
     arrow.dy += .3;
-    arrow.x += arrow.dx / dist * arrowlen * arrdt;
-    arrow.y += arrow.dy / dist * arrowlen * arrdt;
+    let di = arrowlen * arrdt / dist;
+    arrow.x += arrow.dx * di;
+    arrow.y += arrow.dy * di;
     }
 }
 

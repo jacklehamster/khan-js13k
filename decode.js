@@ -58,12 +58,12 @@ function decodeString(result) {
 function decodeShapes(result, precision) {
   const shapes = new Array(result.pop());
   for (let i = 0; i < shapes.length; i++) {
-    shapes[i] = {};
-    shapes[i].name = decodeString(result);
-    shapes[i].lines = decodeLines(result, precision);
-    shapes[i].anim = result.pop();
+    const sh = shapes[i] = {};
+    sh.name = decodeString(result);
+    sh.lines = decodeLines(result, precision);
+    sh.anim = result.pop();
     const p = result.pop();
-    shapes[i].hidden = p === 1;
+    sh.hidden = p === 1;
   }
   return shapes;
 }
