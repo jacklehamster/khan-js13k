@@ -240,7 +240,7 @@ const hutUpgrades = [
   () => {
     // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
     beatGame = true;
-    showText(`Level ${hutLevel}\nBörte found Jamukha and took her revenge. (Congratulations! You beat the game, but feel free keep going, see how far you can go)`);
+    showText(`Level ${hutLevel}\nBörte found Jamukha and took her revenge.\n\nCongratulations! You beat the game. Feel free keep going, see how far you go.`);
     // gameOverDiv.textContent = `Level ${hutLevel}\n.(You beat the game, but can keep going)`;
     foesTotal = Math.min(foesTotal + 50, 400);
     soldierSuperSpeed += .1;
@@ -261,7 +261,7 @@ let rage = 0;
 // function showHealth() {
 // }
 
-let timeLimit = 60 * 6;
+let timeLimit = 300;
 
 let foundBorte = 0;
 let money = 0;
@@ -290,7 +290,7 @@ function showMeTheMoney() {
 
 //  const now = Math.max(inHut ? inHut.enteredHut : (screenPaused || lastframeTime), 0);
   const s = Math.max(0, timeLimit - Math.floor((now() - startTime) / 1000));
-  moneyDiv.innerText = locked? "" : `Level ${hutLevel}\n${str}\n🏵️ ${money}\n${Math.floor(s/60)}:${(100 + s%60).toString().substring(1)}`;
+  moneyDiv.innerText = locked? "" : `Level ${hutLevel}\n${str}\n🏵️ ${money}\n${s?'⏳':'⌛'} ${Math.floor(s/60)}:${(100 + s%60).toString().substring(1)}`;
   if (health && s <= 0) {
     health = 0;
     lifeCheck();
@@ -963,7 +963,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
         sprite.y = hero.y + sin * 2000;
         hero.dx = 0;
         hero.dy = 0;
-        console.log(gTime);
+//        console.log(gTime);
         hero.hitTime = gTime;
 
       }
