@@ -40,6 +40,8 @@ song.stop();
 
 The songs were produced using https://sb.bitsnbites.eu/. To edit a song, just drag the sbox file in there.
 
+Then save as JavaScript.
+
 ## Credits
 
 - The songs are covers of Ennio Moricone's work. (So they likely can't be used commercially).
