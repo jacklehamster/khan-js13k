@@ -12,8 +12,8 @@ setTimeout(() => {
   //let icons = [];
 let canvas = q("canvas"); let ctx=canvas.getContext("2d");
 let cs = canvas.style;
-let cvw = canvas.width = 2000; cs.width = `${cvw/2}px`;
-let cvh = canvas.height = 1200; cs.height = `${cvh/2}px`;
+let cvw = canvas.width = 2000; cs.width = `100%`;//`${cvw/2}px`;
+let cvh = canvas.height = 1200; cs.height = `100%`;//`${cvh/2}px`;
 cs.border = "1px solid black";
 cs.backgroundColor = "#efd";
 setTimeout(() => cs.opacity = 1, 1000);
@@ -397,6 +397,17 @@ function removeArrow(index) {
   arrowSize--;
 }
 
+function removeDust(index) {
+  const to = dust[index];
+  const from = dust[dustSize - 1];
+  to.x = from.x;
+  to.y = from.y;
+  to.dy = from.dy;
+  to.size = from.size;
+  to.born = from.born;
+  dustSize--;
+}
+
 function hasShield(hero) {
   return upgrades.shield && gTime - (hero.lastBlock??-20000) > (upgrades.shield === 2 ? 10000 : 20000);
 }
@@ -417,8 +428,28 @@ function shootArrow(sprite) {
   arrowSize++;
 }
 
+let dustSize = 0;
+const dust = [];
+function addDust(sprite) {
+  if (Math.random() > .3) {
+    return;
+  }
+  const { x, y } = sprite;
+  if (dustSize >= dust.length) {
+    dust.push({});
+  }
+  const arr = dust[dustSize];
+  arr.dy = - .2;
+  arr.x = x + (Math.random() - .5) * 100;
+  arr.y = y + (Math.random() - .5) * 20;
+  arr.size = Math.random() * 20;
+  arr.born = gTime;
+  dustSize++;
+}
+
+
 function repeatDt(callback, subject) {
-  const loops = Math.min(6, Math.max(dt / 8, 1));
+  const loops = Math.min(6, Math.max(dt / 8, 3));
   for (let ti = 0; ti < loops; ti++) {
     callback(subject);
   }
@@ -519,6 +550,12 @@ const sprite = {
     }
 
     repeatDt(processMovement, sprite);
+
+    const dd = disto(sprite.dx, sprite.dy);
+    if (dd > .1) {
+      addDust(sprite);
+    }
+
     if (locked) {
       sprite.x = Math.max(-cvw / 2, Math.min(sprite.x, cvw / 2));
       sprite.y = Math.max(-cvh / 2, Math.min(sprite.y, cvh / 2));
@@ -930,6 +967,10 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
         sprite.speed = sprite.soldier ? Math.max(.025, rando() / 30) : Math.max(.03, rando() / 20);
       }
       repeatDt(processMovement, sprite);
+      if (!soldier) {
+        addDust(sprite);
+      }
+
       const gx = sprite.x - sprite.goal[0];
       const gy = sprite.y - sprite.goal[1];
       sprite.gdist = disto(gx, gy);// Math.sqrt(gx * gx + gy * gy);
@@ -1269,6 +1310,7 @@ function loop(time) {
   ctx.clearRect(0, 0, cvw, cvh);
 
   repeatDt(moveArrows, arrows);
+  repeatDt(moveDust, dust);
 
 
   ctx.beginPath();
@@ -1288,7 +1330,19 @@ function loop(time) {
   }
   ctx.stroke();
 
-//  ctx.fill();
+  ctx.fillStyle = '#eea';
+  for (let i = 0; i < dustSize; i++) {
+    const arrow = dust[i];
+    ctx.beginPath();
+    ctx.arc(arrow.x - sh[0], arrow.y - sh[1], arrow.size, 0, 2 * Math.PI, false);
+    ctx.fill();
+  }
+
+  for (let i = dustSize - 1; i >= 0; i--) {
+    if (time - dust[i].born > 500) {
+      removeDust(i);
+    }
+  }
 
   for (let i = arrowSize - 1; i >= 0; i--) {
     if (time - arrows[i].born > 1500) {
@@ -1379,7 +1433,15 @@ function moveArrows(arrows) {
     let di = arrowlen * arrdt / dist;
     arrow.x += arrow.dx * di;
     arrow.y += arrow.dy * di;
-    }
+  }
+}
+
+function moveDust(dust) {
+  for (let i = 0; i < dustSize; i++) {
+    const arrow = dust[i];
+    arrow.y += arrow.dy;
+    arrow.size *= .995;
+  }
 }
 
 
