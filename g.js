@@ -18,7 +18,7 @@ cs.border = "1px solid black";
 cs.backgroundColor = "#efd";
 setTimeout(() => cs.opacity = 1, 1000);
 
-const costMul = 200;
+const costMul = 100;
 const zoom = .75;
 const keys = {};
 dadd("keyup", (e) => {
@@ -55,12 +55,13 @@ dadd("keydown", (e) => {
         closing = doneShopping();
       } else if (!purchased[shopIndex]) {
         const shopItem = shopList[shopIndex];
-        if (shopItem) {
+        if (shopItem && canBuy(shopItem)) {
           purchased[shopIndex] = true;
           money -= shopItem.cost[0] * costMul;
           showMeTheMoney();
-          shopItem?.buy(shopItem);  
-          if (bowLess) {
+          shopItem?.buy(shopItem);
+          
+          if (hutInfo(inHut).level === 0) {
             closing = doneShopping();          
           }  
         }
@@ -124,22 +125,22 @@ function repeatString(s, num) {
 
 let bowshop;
 const shop = [
-  bowshop = { name: "bow", title: "bow and arrows", description: "(Recommended) Press Space to shoot down enemies and collect 🏵️", cost: [0], buy },
-  { name: "speed", title: "speed", description: () => `Change hoof for faster horse (${repeatString("⭐", upgrades.speed + 1)})`, cost: [0,2,3], buy},
-  { name: "speedWhileShooting", title: "stable aim", description: "Stabilize bow to shoot without slow down the horse", cost: [2], req: "bow", buy},
-  { name: "maxHealth", title: "max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [2, 3, 4], buy: item => {
+  bowshop = { name: "bow", title: "bow and arrows", description: "Press Space to shoot down enemies and collect 🏵️", cost: [0], buy },
+  { name: "speed", title: "speed", description: () => `Change hoof for faster horse (${repeatString("⭐", upgrades.speed + 1)})`, cost: [0,1,2], buy},
+  { name: "speedWhileShooting", title: "stable aim", description: "Stabilize bow to shoot without slow down the horse", cost: [1], req: "bow", buy},
+  { name: "maxHealth", title: "max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [1, 2, 3], buy: item => {
     buy(item);
     health = Math.min(defaultmaxHealth + upgrades.maxHealth * 2, health + 2);
   }},
   { name: "shield", title: "shield", description: () => `This shield blocks one hit. Re-usable after ${20 / (upgrades.shield+1)}s`, cost: [1.5, 3], buy},
   // { name: "reflect", cost: [2, 4], req: "shield"},
-  { name: "quickShot", title: "quickshot", description: "Learn skill. Shoot immediately after one hit", cost: [2], req: "bow", buy},
+  { name: "quickShot", title: "quickshot", description: "Learn skill. Shoot immediately after one hit", cost: [1.5], req: "bow", buy},
   { name: "money", title: "pillage", description: () => `Earn knowledge of finding loot. Each kill provides more 🏵️ (x${2 + upgrades.money})`, cost: [1, 2, 3], req: "bow", buy},
   { name: "rickoShot", title: "rickoshot", description: () => `Learn skill. Arrow aimed properly has +${30 * (upgrades.rickoShot + 1)}% chance to rickochet after hitting.`, cost: [1, 2, 3], req: "bow", buy},
   { name: "giantPiercing", title: "giant piercing", description: () => `Sharpened arrows increases chance of killing a giant to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy},
   { name: "treeNav", title: "forest navigation", description: () => `A compass to help navigate in the forest (${repeatString("⭐", upgrades.treeNav + 1)})`, cost: [1, 2, 3], buy},
   { name: "control", title: "horse control", description: () => `Improved saddle for better control (${repeatString("⭐", upgrades.control + 1)})`, cost: [1, 2, 3], buy},
-  { name: "time", title: "extra time", description: "In exchange of 🏵️, I will delay the boat (+15s)", cost: [.5,1,2,4,6,8,10], buy: () => {
+  { name: "time", title: "extra time", description: "In exchange of 🏵️, I will delay the boat (+15s)", cost: [1,2,4,6,8,10], buy: () => {
     startTime += 15000;
     showMeTheMoney();
     showText("This will give you a bit more time.");
@@ -152,7 +153,7 @@ const shop = [
   { name: "gamble", title: "gamble", description: shopItem => 
       `Play a game of Shagai. (30% chance to double your 🏵️)`,
       // `30% chance to double your 🏵️`,
-      cost: [.5, 1, 2, 3, 4, 5], buy: () => {
+      cost: [1, 2, 3, 4, 5], buy: () => {
     if (rando() <= .35) {
       money += costMul;
       money *= 2;
@@ -300,7 +301,7 @@ setInterval(showMeTheMoney, 1000);
 const gameOverDiv = document.body.appendChild(document.createElement("div"));
 const gods = gameOverDiv.style;
 gods.position = "absolute";
-gods.top = canvas.offsetTop + 50;
+gods.top = canvas.offsetTop + 30;
 gods.left = canvas.offsetLeft + 150;
 //gods.color = "snow";
 // gameOverDiv.textContent = "Press ESC to continue";
@@ -344,11 +345,12 @@ window.addEventListener("focus", function(event) {
 }, false);
 
 
-let root;
+// let root;
 function startGame() {
-    const byteArray = load_binary_resource("rider.13k");
-    root = decodeShape(byteArray);
+    // const byteArray = load_binary_resource("rider.13k");
+    // root = decodeShape(byteArray);
     // console.log(root);
+    console.log(root);
     loop(0);
 }
 
@@ -537,7 +539,7 @@ const sprite = {
       wildHordeMusic.play();
       const upgrade = Object.keys(upgrades).filter(k => upgrades[k]).sort(() => rando() - .5)[0];
       upgrades[upgrade]--;
-      showText("You lost " + shop.filter(s => s.name === upgrade)[0].title.toUpperCase());
+      showText("You lost " + shop.filter(s => s.name === upgrade)[0].title.toUpperCase() + "\nReach the next hut to regain upgrades.");
       //icons.push("-"+upgrade);
       health = defaultmaxHealth + upgrades.maxHealth * 2;
       if (upgrade === "bow") {
@@ -641,13 +643,13 @@ const sprite = {
       y: sprite => evaluate(sprite.y, sprite) + 1,
       parent: false,
       sprites: undefined,
-      animation: "shield",
-      range: [0],
-      hotspot: [.47, .72],
-      color: sprite => hasShield(sprite) && upgrades.shield > 1 ? "gold" : "#69f",
+      animation: sprite => sprite.hut ? "hut" : "shield",
+      range: sprite => sprite.hut ? [2] : [0],
+      hotspot: sprite => sprite.hut ? [.53, .7] : [.47, .72],
+      color: sprite => sprite.hut ? "#960" : hasShield(sprite) && upgrades.shield > 1 ? "gold" : "#69f",
       direction: (sprite) => Math.sign(sprite.orientation),
       frame: () => 0,
-      hidden: sprite => !hasShield(sprite) || sprite.borte || sprite.foe || sprite.corpse || sprite.soldier,
+      hidden: sprite => !sprite.hut && (!hasShield(sprite) || sprite.borte || sprite.foe || sprite.corpse || sprite.soldier),
     }, sprite),
     sprite => evaluate({
       ...sprite,
@@ -704,6 +706,18 @@ function evaluate(value, sprite) {
   return typeof(value) === "function" ? value(sprite) : value;
 }
 
+function doHitFoe(hitFoe) {
+  const bonus = (hitFoe.superSoldier ? 40 : Math.floor(3 + Math.random()*5)) * (1 + upgrades.money);
+  bubbles.add({
+    born: gTime,
+    bonus,
+    x: hitFoe.x,
+    y: hitFoe.y,
+  });
+  money += bonus;
+  showMeTheMoney();
+}
+
 function showSprite(sprite, accumulator) {
   const sprites = evaluate(sprite.sprites, sprite);
   sprites.forEach(sprite => {
@@ -736,15 +750,7 @@ function showSprite(sprite, accumulator) {
             hitFoe.dy = 0;
             hitFoe.goal[0] = hitFoe.x + -gx * gdisto;
             hitFoe.goal[1] = hitFoe.y + -gy * gdisto;  
-            const bonus = (superSoldier ? 40 : 8) * (1 + upgrades.money);
-            bubbles.add({
-              born: gTime,
-              bonus,
-              x: hitFoe.x,
-              y: hitFoe.y,
-            });
-            money += bonus;
-            showMeTheMoney();
+            doHitFoe(hitFoe);
           } else {
             hitFoe.hitTime = gTime;
           }
@@ -1004,6 +1010,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
 //        console.log(gTime);
         hero.hitTime = gTime;
 
+        doHitFoe(sprite);
       }
 
       if (nearHut || !health) {
@@ -1066,9 +1073,9 @@ const shopDiv = document.body.appendChild(document.createElement("div"));
 const sds = shopDiv.style;
 sds.position = "absolute";
 sds.left = "200px";
-sds.top = "200px"
+sds.top = "170px"
 sds.display = "none";
-const shopDivs = new Array(5).fill(null).map(() => {
+const shopDivs = new Array(6).fill(null).map(() => {
   const s = shopDiv.appendChild(document.createElement("div"));
   const ssd = s.style;
   ssd.backgroundColor = "#444";
@@ -1160,7 +1167,9 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
               hutInfo(inHut).level = hutLevel++;
               onExit = hutUpgrades[Math.min(hutLevel, hutUpgrades.length - 1)]?.();
             }
-          
+            if (hutInfo(inHut).level > 0) {
+              money += 100;
+            }
 
 //            health = defaultmaxHealth + upgrades.maxHealth * 2;
             showMeTheMoney();
@@ -1173,8 +1182,8 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
           shakeSize = 20;
           hero.x -= hx;
           hero.y -= hy;
-          hero.dx *= (upgrades.treeNav * .3);
-          hero.dy *= (upgrades.treeNav * .3);
+          hero.dx *= (upgrades.treeNav * .25 + .2);
+          hero.dy *= (upgrades.treeNav * .25 + .2);
         }
         // cs.backgroundColor = "#a00";
         // setTimeout(() => {
@@ -1382,8 +1391,9 @@ function loop(time) {
       const iy = hero.y  + chdy / chdist * ddd - sh[1];
       indic[0] += (ix - indic[0]) * .1;
       indic[1] += (iy - indic[1]) * .1;
-      ctx.arc(Math.min(cvw - 80, Math.max(80, indic[0])),
-              Math.min(cvh - 80, Math.max(80, indic[1])), 15, 0, 2 * Math.PI);
+      const wiggle = 50;
+      ctx.arc(Math.min(cvw - 80 + Math.random() * wiggle, Math.max(80 - Math.random() * wiggle, indic[0])),
+              Math.min(cvh - 80 + Math.random() * wiggle, Math.max(80 - Math.random() * wiggle, indic[1])), 15, 0, 2 * Math.PI);
       ctx.fill();  
     }  
   }

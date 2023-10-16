@@ -910,16 +910,17 @@ function encodeShapes(shapes, result) {
   shapes.forEach(shape => {
     encodeString(shape.name, result);
     encodeLines(shape.lines, result);
-    result.push(shape.anim ?? 0);
+    encodeString(`${shape.anim ?? 0}`, result);
+    // result.push(shape.anim ?? 0);
     result.push(shape.hidden ? 1 : 0);
 //    console.log(shape);
   });
 //  console.log(result);
 }
 
-
 function encodeAnimations(animations, result) {
-  result.push(animations.length);
+//  result.push(animations.length);
+  encodeString(`${animations.length}`, result);
   animations.forEach(animation => {
     encodeString(animation, result);
   });
@@ -999,6 +1000,18 @@ downloadButton.addEventListener("click", () => {
   console.log(data);
 });
 
+
+const downloadButton2 = document.body.appendChild(document.createElement("button"));
+downloadButton2.style.position = "absolute";
+downloadButton2.style.right = "10px";
+downloadButton2.style.top = "130px";
+downloadButton2.textContent = "export JS";
+downloadButton2.style.width = "80px";
+downloadButton2.addEventListener("click", () => {
+  const data = `let root = ${JSON.stringify(root, null, "  ")}`;
+  downloadBlob(data, 'rider.js', 'application/octet-stream');
+  console.log(data);
+});
 
 
 function load_binary_resource(url) {

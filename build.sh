@@ -4,7 +4,7 @@ mkdir release
 
 rm -rf game.zip
 
-uglifyjs --mangle toplevel decode.js sound/soundbox.js sound/wild-horde.js sound/fur-elise.js sound/song.js g.js -o release/gg.js
+uglifyjs --mangle toplevel rider.js decode.js sound/soundbox.js sound/wild-horde.js sound/fur-elise.js sound/song.js g.js -o release/gg.js
 
 rm -rf temp/gg.js
 mv release/gg.js temp

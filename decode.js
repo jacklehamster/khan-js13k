@@ -61,7 +61,7 @@ function decodeShapes(result, precision) {
     const sh = shapes[i] = {};
     sh.name = decodeString(result);
     sh.lines = decodeLines(result, precision);
-    sh.anim = result.pop();
+    sh.anim = parseInt(decodeString(result));//result.pop();
     const p = result.pop();
     sh.hidden = p === 1;
   }
@@ -70,7 +70,8 @@ function decodeShapes(result, precision) {
 
 
 function decodeAnimations(result) {
-  const animations = new Array(result.pop());
+  const length = parseInt(decodeString(result));
+  const animations = new Array(length);
   for (let i = 0; i < animations.length; i++) {
     animations[i] = decodeString(result);
   }
