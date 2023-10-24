@@ -47,11 +47,12 @@ cutSceneText.style.position = "absolute";
 cutSceneText.style.left = "50%";
 cutSceneText.style.width = "60%";
 cutSceneText.style.marginLeft = "-30%";
-cutSceneText.style.bottom = "200px";
+cutSceneText.style.top = "450px";
 cutSceneText.style.backgroundColor = "black";
 cutSceneText.style.display = "none";
 cutSceneText.style.fontSize = "20pt";
 cutSceneText.style.zIndex = 1100;
+cutSceneDiv.style.pointerEvents = "none";
 
 let textInterval = 0;
 let onPostCutScene = null;
