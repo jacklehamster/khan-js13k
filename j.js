@@ -50,7 +50,7 @@ function thumbLoop(time) {
 requestAnimationFrame(thumbLoop);
 
 
-let root = JSON.parse(localStorage.getItem("root") ?? JSON.stringify(rider));
+//let root = JSON.parse(localStorage.getItem("root") ?? JSON.stringify(rider));
 const canSave = true;
 //root = decodeShape(encodeShape(root));
 //let shapes = root.shapes;

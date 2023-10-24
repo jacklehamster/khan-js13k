@@ -1,5 +1,10 @@
+@font-face {
+    font-family: "gamefont";
+    src: url(gamefont.ttf) format("truetype");
+}
 body {
     color: silver;
+    font-family: "gamefont", Verdana, Tahoma;
 }
 canvas {
     margin: auto;
@@ -16,3 +21,27 @@ h3 {
     flex-direction: column;
     align-items: center;
 }
+b {
+    color: white;
+}
+pink {
+    color: pink
+}
+#title {
+    color: #ea0303;
+    font-size: 60px;
+    text-shadow: #000 2px 2px 5px;
+    visibility: hidden;
+    z-index: 1000;
+    transition: opacity 3s;
+}
+
+.blink_me {
+    animation: blinker 1s linear infinite;
+  }
+  
+  @keyframes blinker {
+    50% {
+      color: red;
+    }
+  }

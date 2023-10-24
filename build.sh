@@ -4,7 +4,7 @@ mkdir release
 
 rm -rf game.zip
 
-uglifyjs --mangle toplevel rider.js decode.js sound/soundbox.js sound/wild-horde.js sound/fur-elise.js sound/song.js g.js -o release/gg.js
+uglifyjs --mangle toplevel ZzFXMicro.min.js rider.js decode.js sound/soundbox.js sound/wild-horde.js sound/fur-elise.js sound/song.js g.js -o release/gg.js
 
 rm -rf temp/gg.js
 mv release/gg.js temp
@@ -13,6 +13,8 @@ npx roadroller temp/gg.js -o release/gg.js
 cp play.html release/index.html
 cp game.css release
 cp rider.13k release
+cp gamefont.ttf release
+cp khan.png release
 
 zip -vr game.zip release/ -x "*.DS_Store"
 echo "=================================="
