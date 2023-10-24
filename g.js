@@ -493,7 +493,7 @@ const hutUpgrades = [
           [2, "“Show us your fealty, and I shall spare your life.”", true],
           [4, "“You win, Börte!”"],
           [4, "“I swear allegiance to you.”"],
-          [3, "“Börte, you're going to let him live after what he has done?”"],
+          [3, "“Börte, you're going to let this vermin live after what he has done?”"],
           [3, "“Let me slash his gut!”"],
           [2, "“I spare him for now.”", true],
           [2, "“But he will remain as our servant...”", true],
