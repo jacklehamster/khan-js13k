@@ -81,7 +81,7 @@ function showCutScene(series, postCutScene) {
   clearInterval(textInterval);
   textIndex = 0;
   textInterval = setInterval(() => {
-    const [image, text, borte, fadeOut] = series[cutSceneIndex];
+    const [image, text, borte, fadeOut, highlight] = series[cutSceneIndex];
     fadeOutCutScene = fadeOut;
     const t1 = text.substring(0, textIndex);
     const t2 = text.substring(textIndex);
@@ -95,7 +95,7 @@ function showCutScene(series, postCutScene) {
         }
       }  
     }
-    cutSceneText.innerHTML = `<span ${borte?"style=color:pink":""}>${t1}</span><span style=color:black>${t2}</span>`
+    cutSceneText.innerHTML = `<span ${highlight?"style=color:white":borte?"style=color:pink":""}>${t1}</span><span style=color:black>${t2}</span>`
       + (`<br><div style=text-align:right;width:100%>${textIndex < text.length ? "💬" : Math.floor(textIndex/5) % 2 === 0 ? "&nbsp;&nbsp;⏩" : "⏩&nbsp;&nbsp;"}</div>`);
       textIndex++;
     canSkipCutScene = textIndex >= text.length;
@@ -306,36 +306,36 @@ const shop = [
     priority: () => 2,
     tag: "B&A", color: "#FF5733",
   },
-  { name: "speed", title: "speed 💨", description: () => `Change hoof for faster horse (${repeatString("⭐", upgrades.speed + 1)})`, cost: [0,1,2], buy,
+  { name: "speed", title: "speed 💨", description: () => `Change hooves for faster horse (${repeatString("⭐", upgrades.speed + 1)})`, cost: [0,1,2], buy,
     tag: "S", color: "#0096FF"},
   { name: "speedWhileShooting", title: "stable aim", description: "Stabilize bow to shoot without slow down the horse", cost: [1], req: "bow", buy,
     tag: "SA", color: "#9400D3"
   },
-  { name: "maxHealth", title: "max health", description: "Eat foot to increases the maximum health by one ❤️", cost: [1, 2, 3], buy: item => {
+  { name: "maxHealth", title: "max health", description: "Eat food to increases the maximum health by one ❤️", cost: [1, 2, 3], buy: item => {
     buy(item);
     health = Math.min(defaultmaxHealth + upgrades.maxHealth * 2, health + 2);
   }, tag: "MH", color: "#FFB6C1"},
-  { name: "shield", title: "shield", description: () => `This shield blocks one hit. Re-usable after ${Math.ceil(20 / (upgrades.shield+1))}s`, cost: [1.5, 3], buy,
+  { name: "shield", title: "shield", description: () => `This shield blocks one hit, then is re-usable after ${Math.ceil(20 / (upgrades.shield+1))}s`, cost: [1.5, 3], buy,
     tag: "SH", color: "#088F8F"},
   // { name: "reflect", cost: [2, 4], req: "shield"},
-  { name: "quickShot", title: "quickshot", description: "Learn skill. Shoot immediately after one hit", cost: [1.5], req: "bow", buy,
+  { name: "quickShot", title: "quickshot", description: "Learn a skill that lets you shoot immediately after one hit", cost: [1.5], req: "bow", buy,
     tag: "QS", color: "#FFC300 "},
-  { name: "money", title: "pillage", description: () => `Earn knowledge of finding loot. Each kill provides more 🏵️ (x${1 + .5 * upgrades.money})`, cost: [1, 2, 3], req: "bow", buy,
+  { name: "money", title: "pillage", description: () => `Earn knowledge of finding better loot. Each kill provides more 🏵️ (x${1 + .5 * upgrades.money})`, cost: [1, 2, 3], req: "bow", buy,
     tag: "🏵️", color: "#008000"},
-  { name: "rickoShot", title: "ricoshot", description: () => `Learn skill. Arrow aimed properly has +${30 * (upgrades.rickoShot + 1)}% chance to ricochet after hitting.`, cost: [1.5, 2, 3], req: "bow", buy,
+  { name: "rickoShot", title: "ricoshot", description: () => `New shooting technique.\nYour shots have +${30 * (upgrades.rickoShot + 1)}% chance to ricochet.`, cost: [1.5, 2, 3], req: "bow", buy,
     tag: "RS", color: "#7B68EE"},
-  { name: "giantPiercing", title: "giant piercing", description: () => `Sharpened arrows increases chance of killing a giant to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy,
+  { name: "giantPiercing", title: "giant piercing", description: () => `Sharpened arrows increases the chance of killing a giant from ${5 + 20 * (upgrades.giantPiercing)} to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy,
     tag: "GP", color: "#A52A2A"},
-  { name: "treeNav", title: "forest navigation", description: () => `A compass to help navigate in the forest (${repeatString("⭐", upgrades.treeNav + 1)})`, cost: [1, 2, 3], buy,
+  { name: "treeNav", title: "forest navigation", description: () => `A compass to help navigate more easily in the forest (${repeatString("⭐", upgrades.treeNav + 1)})`, cost: [1, 2, 3], buy,
     tag: "FN", color: "#228B22"},
-  { name: "control", title: "horse control", description: () => `Improved saddle for better control (${repeatString("⭐", upgrades.control + 1)})`, cost: [1, 2, 3], buy,
+  { name: "control", title: "horse control", description: () => `Improved saddle for better control of the horse (${repeatString("⭐", upgrades.control + 1)})`, cost: [1, 2, 3], buy,
     tag: "HC", color: "#8B4513"},
-  { name: "time", title: "extra time", description: "In exchange of 🏵️, I will delay the boat (+30s)", cost: [1,2,3,4,5,6], buy: item => {
+  { name: "time", title: "extra time", description: "In exchange of 🏵️, I will delay the boat (⏳ +30s)", cost: [1,2,3,4,5,6], buy: item => {
 //    startTime += 20000;
     tick -= 30;
     showMeTheMoney();
-    showText("This will give you a bit more time to reach <b>Börte</b>.");
     item.cost.shift();
+    showText("This will give you a bit more time to reach <b>Börte</b>.");
   }, disabled: () => foundBorte, priority: () => timeLimit - tick < 60 ? 1 : timeLimit - tick > 200 ? -1 : 0},
   { name: "health", title: "rejuvinate", description: "Drink kumis, restore ❤️ to max", cost: [1,2,4,6,8,10], buy: item => {
     health = defaultmaxHealth + upgrades.maxHealth * 2;
@@ -344,7 +344,7 @@ const shop = [
     showText("This ale will give you energy to go on!");
   }, disabled: () => health >= defaultmaxHealth + upgrades.maxHealth * 2 },
   { name: "gamble", title: "gamble", description: shopItem => 
-      `Dare to go all-in in a game of Shagai. (50% chance to double your 🏵️)`,
+      `Dare to go all-in in a game of Shagai? (50% chance to double your 🏵️)`,
       // `30% chance to double your 🏵️`,
       cost: [() => Math.floor(money * 2 / costMul) / 2], buy: (item, moneySpent) => {
         if (rando() <= .51) {
@@ -412,7 +412,7 @@ const hutUpgrades = [
         [3, "..."],
         [0, `“Spare my life, Khan! I'll help you find Börte.”`],
         [0, `“You should hurry! Jamukha plans to send her away on a boat.”`],
-        [0, `“Find her before time runs out!”`],
+        [0, `“Rescue Börte before time runs out!”`, false, false, true],
       ], () => {
       zzfx(...[1.99,,238,,.08,.14,2,0,,-47,-84,,.15,,,.6,.15,,,.17]); // Event
       showText("You must find Börte in one of the yurt.\nTake one item, then follow the circular sign.\nEach yurt contains 100🏵️");
@@ -489,19 +489,21 @@ const hutUpgrades = [
         wildHordeMusic.stop();
         showCutScene([
           [3, "..."],
-          [2, "“It's over Jamukha.”", true],
-          [2, "“Show us your fealty, and I shall spare your life.”", true],
-          [4, "“You win, Börte!”"],
-          [4, "“I swear allegiance to you.”"],
-          [3, "“Börte, you're going to let this vermin live after what he has done?”"],
-          [3, "“Let me slash his gut!”"],
-          [2, "“I spare him for now.”", true],
-          [2, "“But he will remain as our servant...”", true],
-          [2, "“...for the rest of his life.”", true, true],
+          [2, "“It is over, Jamukha the Jadaran.”", true],
+          [2, "“Show us your fealty, and your life shall be spared.”", true],
+          [4, "“You win, Börte! I admit defeat.”"],
+          [4, "“Have mercy on me. I swear all my allegiance to you.”"],
+          [3, "“Börte, you're going to let this vermin live after what he has done to you?”"],
+          [3, "“Let me slash his gut open!”"],
+          [2, "“Collect yourself, Temüjin.”", true],
+          [2, "“I choose to spare him for now.”", true],
+          [4, "“Thank you, Börte. God bless your gentle soul.”"],
+          [2, "“But know Jamukha, that you will remain as our servant...”", true],
+          [2, "“...for the rest of your life.”", true, true],
           [6, "THE END"],
         ], () => {
           zzfx(...[1.99,,238,,.08,.14,2,0,,-47,-84,,.15,,,.6,.15,,,.17]); // Event
-          showText("<b>Congratulations!</b> You beat the game. Feel free keep going, see how far you go.\nYou no longer have revival option, <b>death is now permanent</b>.\nAs always, each new yurt visited will increase the game's difficulty.\n<b>Good luck, Khan</b>!");
+          showText("<b>Congratulations!</b> You beat the game. Feel free keep going, see how far you go.\nYou no longer have revival option, <b>death is now permanent</b>.\nAs always, each new yurt visited will increase the game's difficulty.\n<b>Good luck, Khan.</b> May the spirits of the steppe guide your path.");
           showShop();  
         });
         beatGame = true;
@@ -511,13 +513,11 @@ const hutUpgrades = [
           [3, "You really are The Terror of Mongolia."],
         ], () => {
           zzfx(...[1.99,,238,,.08,.14,2,0,,-47,-84,,.15,,,.6,.15,,,.17]); // Event
-          showText("<b>Congratulations!</b> You beat the game. Feel free keep going, see how far you go.\nYou no longer have revival option. Death is now permanent.");
+          const message = `<b>Level: ${hutLevel}</b>\nLet's see how much further you can go!`;
+          // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
+          showText(message);
           showShop();  
         });
-        const message = `<b>Level: ${hutLevel}</b>\nLet's see how much further you can go!`;
-        // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
-        showText(message);
-        showShop();  
       }
     foesTotal = Math.min(foesTotal + 50, 400);
     soldierSuperSpeed += .3;
@@ -651,7 +651,7 @@ let bestScore = parseInt(localStorage.getItem("bestScore") ?? "0");
 showText("");
 function showGameOver() {
   wildHordeMusic.stop();
-  const pointsPerLevel = 5000;
+  const pointsPerLevel = 10000;
   const pointsPerUpgrade = 1000;
   const upgradesCount = Object.values(upgrades).reduce((a,b) => a + b, 0);
   const revivalBonus = Math.max(3 - revival, 0) * 10000;
@@ -664,7 +664,7 @@ function showGameOver() {
   const foundBorteBonus = foundBorte ? (s%60) * 100 + Math.floor(s/60) * 10000 : 0;
   const timeRemaining = `${Math.floor(s/60)}:${(100 + s%60).toString().substring(1)}`;
 
-  const baseScore = hutLevel * pointsPerLevel + money + upgradesCount * pointsPerUpgrade + revivalBonus + bonusPoints + foundBorteBonus;
+  const baseScore = hutLevel * pointsPerLevel + money * 10 + upgradesCount * pointsPerUpgrade + revivalBonus + bonusPoints + foundBorteBonus;
   const finalScore = Math.ceil(baseScore * accuracyBonus);
   if (finalScore > bestScore) {
     bestScore = finalScore;
@@ -673,16 +673,16 @@ function showGameOver() {
   showText("<div style='font-size: 24pt'><b>GAME OVER, KHAN</b></div><div style='font-size: 18pt'>" 
     + "\n<b>LEVEL</b>: " + hutLevel + ` (+ ${hutLevel * pointsPerLevel})`
     + "\n<b>UPGRADES</b>: " + upgradesCount + ` (+ ${upgradesCount * pointsPerUpgrade})`
-    + "\n<b>MONEY</b>: " + money + ` (+ ${money})`
+    + "\n<b>MONEY</b>: " + money + ` (+ ${money * 10})`
     + "\n<b>REVIVALS</b>: " + revival + ` (+ ${revivalBonus})`
     + (bonusPoints ? "\n<b>BONUS POINTS</b>: +" + bonusPoints: "")
     + (foundBorteBonus ? "\n<b>RESCUED BÖRTE</b>: ⌛ " + timeRemaining + ` (+ ${foundBorteBonus})`: "")
     + "\n<b>BASE SCORE</b>: " + baseScore
     + (!shotsTaken ? "\n<b>SHOTLESS</b>: " : "\n<b>ACCURACY</b>: " + parseFloat((100 * accuracy).toFixed(1)) + "%") + ` (x ${accuracyBonus})`
     + "\n"
-    + "\n<b>FINAL SCORE: " + finalScore + "</b>\n"
+    + "\n<b>FINAL SCORE: " + finalScore + "</b>"
     + "\n<b>BEST</b>: " + bestScore + "\n\n"
-    + (canContinue() ? "Press <b>ESC</b> to revive.\nYou will lose all your money and one random upgrade." : "")
+    + (canContinue() ? "Press <b>ESC</b> to revive. You will lose all your money and one upgrade." : "")
     + "</div>"
     );
 }
