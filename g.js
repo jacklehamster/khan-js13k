@@ -344,10 +344,10 @@ const shop = [
     showText("This ale will give you energy to go on!");
   }, disabled: () => health >= defaultmaxHealth + upgrades.maxHealth * 2 },
   { name: "gamble", title: "gamble", description: shopItem => 
-      `Play a game of Shagai. (50% chance to double your 🏵️)`,
+      `Dare to go all-in in a game of Shagai. (50% chance to double your 🏵️)`,
       // `30% chance to double your 🏵️`,
       cost: [() => Math.floor(money * 2 / costMul) / 2], buy: (item, moneySpent) => {
-        if (rando() <= .5) {
+        if (rando() <= .51) {
           money += moneySpent;
           money *= 2;
           showMeTheMoney();
