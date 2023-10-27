@@ -415,7 +415,7 @@ const hutUpgrades = [
         [0, `“Rescue Börte before time runs out!”`, false, false, true],
       ], () => {
       zzfx(...[1.99,,238,,.08,.14,2,0,,-47,-84,,.15,,,.6,.15,,,.17]); // Event
-      showText("You must find Börte in one of the yurt.\nTake one item, then follow the circular sign.\nEach yurt contains 100🏵️");
+      showText("You must find Börte in one of the yurt.\nChoose your first upgrade, then follow the circular sign.\nEach new yurt visited will contain 100🏵️");
       showShop();  
     });
 //    const text = `Spare my life, Khan! I'll help you find Börte.\nYou should hurry! Jamukha plans to send her away on a boat.\nTake one item, then follow the sign.`;
@@ -503,7 +503,7 @@ const hutUpgrades = [
           [6, "THE END"],
         ], () => {
           zzfx(...[1.99,,238,,.08,.14,2,0,,-47,-84,,.15,,,.6,.15,,,.17]); // Event
-          showText("<b>Congratulations!</b> You beat the game. Feel free keep going, see how far you go.\nYou no longer have revival option, <b>death is now permanent</b>.\nAs always, each new yurt visited will increase the game's difficulty.\n<b>Good luck, Khan.</b> May the spirits of the steppe guide your path.");
+          showText("<b>Congratulations!</b> You beat the game.\n<span style=font-size:14pt>Feel free keep going, see how far you go. You no longer have revival option, <b>death is now permanent</b>. Each new yurt visited still increase the game's difficulty.</span>\n<b style=color:#FFD700>Good luck, Khan. May the spirits of the steppe guide your path.</b>");
           showShop();  
         });
         beatGame = true;
@@ -553,7 +553,7 @@ mds.top = canvas.offsetTop + 25;
 mds.left = canvas.offsetLeft + 40;
 mds.color = "#880";
 mds.fontSize = "14pt";
-mds.whiteSpace = "pre";
+mds.whiteSpace = "pre-wrap";
 mds.pointerEvents = "none";
 
 const upgradeDiv = document.body.appendChild(document.createElement("div"));
@@ -638,8 +638,11 @@ gods.top = canvas.offsetTop + 30;
 gods.left = canvas.offsetLeft + 150;
 gods.fontSize = "16pt";
 gods.marginRight = "50px";
-gods.whiteSpace = "pre";
+gods.whiteSpace = "pre-wrap";
 gods.pointerEvents = "none";
+gods.backgroundColor = "#300";
+gods.padding = "5px";
+gods.minWidth = "640px";
 
 
 const pointsPerShopBonus = 5000;
@@ -1569,8 +1572,32 @@ const shopDiv = document.body.appendChild(document.createElement("div"));
 const sds = shopDiv.style;
 sds.position = "absolute";
 sds.left = "200px";
-sds.top = "190px"
+sds.top = "150px"
 sds.display = "none";
+
+function addAG() {
+  const agDiv = shopDiv.appendChild(document.createElement("div"));
+  agDiv.style.position = "fixed";
+  agDiv.style.right = "10px";
+  agDiv.style.bottom = "10px";
+  agDiv.style.zIndex = 1000;
+  const link = agDiv.appendChild(document.createElement("a"));
+  link.href = "https://www.addictinggames.com";
+  link.target = "_blank";
+
+  link.addEventListener("mouseover", () => {
+    agImg.src = "logo/agh.png";
+  });
+  link.addEventListener("mouseout", () => {
+    agImg.src = "logo/ag.png";
+  });
+
+  const agImg = link.appendChild(document.createElement("img"));
+  agImg.src = "logo/ag.png";
+  agImg.style.width = "178px";
+  agImg.style.height = "71px";
+}
+
 const shopDivs = new Array(6).fill(null).map(() => {
   const s = shopDiv.appendChild(document.createElement("div"));
   const ssd = s.style;
@@ -1610,7 +1637,7 @@ function showShop(refresh) {
     sd.style.display = i > s.length - (!upgrades.bow ? 1 : 0) ? "none" : "";
     sd.style.opacity = i===s.length || s[i] && canBuy(s[i]) || purchased[i] ? 1 : .5;
     sd.style.color = purchased[i] ? "green" : "";
-    sd.style.whiteSpace = "pre";
+    sd.style.whiteSpace = "pre-wrap";
     const upgradeLevel = (upgrades[s[i]?.name] ?? 0) + (purchased[i] ? 0 : 1);
     sd.innerHTML = i===s.length ? "Exit" : !s[i] ? "" : `<b>${s[i].title.toUpperCase() + (upgradeLevel > 1 ? ` ${repeatString("I", upgradeLevel)}` : "") }</b> ${purchased[i] ? "✔️" : !evaluate(s[i].cost[0]) ? "" : `(Cost: ${evaluate(s[i].cost[0])*costMul} 🏵️)`}\n${evaluate(s[i].description, s[i])}`;
   }
@@ -2035,7 +2062,7 @@ function drawGround() {
   //   }
   // }
   // ctx.fill();  
-
+  window.showText = showText;
 }
 
 
@@ -2046,5 +2073,9 @@ function drawGround() {
 
 
 startGame();
+
+addAG();
+
+
 }, 3000);
 }); /// END

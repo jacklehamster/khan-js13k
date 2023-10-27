@@ -1,6 +1,7 @@
 echo "================================="
 rm -rf release
 mkdir release
+mkdir -p release/logo
 
 rm -rf game.zip
 
@@ -15,6 +16,7 @@ cp game.css release
 cp rider.13k release
 cp gamefont.ttf release
 cp khan.png release
+cp logo/*.* release/logo
 
 zip -vr game.zip release/ -x "*.DS_Store"
 echo "=================================="
