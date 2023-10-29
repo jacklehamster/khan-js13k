@@ -640,8 +640,8 @@ gods.fontSize = "16pt";
 gods.marginRight = "50px";
 gods.whiteSpace = "pre-wrap";
 gods.pointerEvents = "none";
-gods.backgroundColor = "#300";
-gods.padding = "5px";
+gods.backgroundColor = "#33000033";
+gods.padding = "10px";
 gods.minWidth = "640px";
 
 
@@ -680,7 +680,7 @@ function showGameOver() {
     + "\n<b>REVIVALS</b>: " + revival + ` (+ ${revivalBonus})`
     + (bonusPoints ? "\n<b>BONUS POINTS</b>: +" + bonusPoints: "")
     + (foundBorteBonus ? "\n<b>RESCUED BÖRTE</b>: ⌛ " + timeRemaining + ` (+ ${foundBorteBonus})`: "")
-    + "\n<b>BASE SCORE</b>: " + baseScore
+    + "\n<b>BASE SCORE</b>: = " + baseScore
     + (!shotsTaken ? "\n<b>SHOTLESS</b>: " : "\n<b>ACCURACY</b>: " + parseFloat((100 * accuracy).toFixed(1)) + "%") + ` (x ${accuracyBonus})`
     + "\n"
     + "\n<b>FINAL SCORE: " + finalScore + "</b>"
@@ -1066,6 +1066,7 @@ const sprite = {
   sprites: [
     sprite => evaluate({
       ...sprite,
+      process: undefined,
       y: sprite => evaluate(sprite.y, sprite) - .1,
       parent: false,
       sprites: undefined,
@@ -1111,7 +1112,7 @@ const sprite = {
     }, sprite),
     sprite => evaluate({
       ...sprite,
-      process: undefined,
+      // process: undefined,
       layer: -2,
       parent: false,
       sprites: undefined,
