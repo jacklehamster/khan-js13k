@@ -17,7 +17,7 @@ let cvh = canvas.height = 1200; cs.height = `100%`;//`${cvh/2}px`;
 cs.border = "1px solid black";
 cs.backgroundColor = "#efd";
 setTimeout(() => cs.opacity = 1, 1000);
-ctx.font = "bold 34px gamefont";
+ctx.font = "bold 40px gamefont";//"bold 34px gamefont";
 
 
 const costMul = 100;
@@ -1303,10 +1303,9 @@ function display(s) {
       let canvas;
       if (!cacheBox[tag]) {
 //        console.log(tag);
-        canvas = document.createElement("canvas");
+//        console.log(Math.abs(width), Math.abs(height));
+        canvas = new OffscreenCanvas(Math.abs(width), Math.abs(height));//document.createElement("canvas");
         cacheBox[tag] = {canvas};
-        canvas.width = width;
-        canvas.height = height;
         canvas.getContext("2d").lineWidth = 6;
         canvas.getContext("2d").strokeStyle = "black";
 
@@ -1908,9 +1907,6 @@ function loop(time) {
 
 //  console.log(arrowSize);
 
-  ctx.strokeStyle = "#380";
-  ctx.lineWidth = 2;
-
   accumulator.length = 0;
   drawGround(accumulator);
   elements.forEach(e => e.forEach(s => showSprite(s, accumulator)));
@@ -1942,9 +1938,10 @@ function loop(time) {
       const wave = Math.sin(time / 200) * wiggle - 1;
       const ppx = Math.min(cvw - 80 + wave, Math.max(50 - wave, indic[0]));
       const ppy = Math.min(cvh - 80 + wave, Math.max(50 - wave, indic[1]));
-      ctx.arc(ppx, ppy, 15, 0, 2 * Math.PI);
+      //  indicator
+      ctx.arc(ppx, ppy, 20, 0, 2 * Math.PI);
       ctx.fill();  
-      ctx.fillText(`${Math.round(chdist / 100) - 10}`, ppx - 20, ppy + 40);
+      ctx.fillText(`${Math.round(chdist / 100) - 10}`, ppx - 20, ppy + 50);
     }
   }
 
@@ -2025,6 +2022,9 @@ function moveBlood(blood) {
 
 function drawGround() {
   const spacing = 200;
+  ctx.strokeStyle = "#ab6"//"#380";
+  ctx.lineWidth = 2;
+
   ctx.beginPath();
   const cell = [Math.round(sh[0] / spacing), Math.round(sh[1] / spacing)];
   for (let y = -15; y < 15; y++) {
