@@ -4,9 +4,87 @@ const dadd = document.addEventListener;
 const rando = Math.random;
 const disto = (dx, dy) => Math.sqrt(dx*dx+dy*dy);
 
+
+function supports3(e) {
+  //using toDataURL() method
+  var c = document.createElement("canvas");
+  var ctx = c.getContext("2d");
+  const em = 16;
+  c.width = em;
+  c.height = em;
+
+  ctx.clearRect(0, 0, em, em);
+  ctx.fillText(e, 0, em);
+  let emo = c.toDataURL()
+
+  ctx.clearRect(0, 0, em, em);
+  ctx.fillText('\uFFFF', 0, em);
+  let bad1 = c.toDataURL()
+  ctx.clearRect(0, 0, em, em);
+  ctx.fillText('\uFFFF\uFFFF', 0, em);
+  let bad2 = c.toDataURL()
+
+  return (emo != bad1) && (emo != bad2)
+}
+
+const halfHeart = supports3('❤️‍🩹') ? '❤️‍🩹' : '🔥';
+const noHeart = supports3("🩶") ? "🩶" : 'X';
+
+const cutSceneContainer = document.body.appendChild(document.createElement("div"));;
+const cutSceneDiv = cutSceneContainer.appendChild(document.createElement("div"));
+const cds = cutSceneDiv.style;
+cds.position = "absolute";
+cds.left = "50%";
+cds.top = "50px";
+cds.backgroundImage = `url(khan.png)`;
+cds.backgroundSize = "cover";
+cds.width = "400px";
+cds.height = "400px";
+cds.visibility = "hidden";
+cds.marginLeft = "-200px";
+cds.zIndex = 1000;
+cds.opacity = 0;
+cds.transition = "opacity 2s";
+
+
+const shopDiv = document.body.appendChild(document.createElement("div"));
+const sds = shopDiv.style;
+sds.position = "absolute";
+sds.left = "200px";
+sds.top = "150px"
+// sds.display = "none";
+sds.visibility = "hidden";
+
+
+
+function addAG() {
+  const agDiv = shopDiv.appendChild(document.createElement("div"));
+  agDiv.style.position = "fixed";
+  agDiv.style.right = "10px";
+  agDiv.style.bottom = "10px";
+  agDiv.style.zIndex = 1000;
+  const link = agDiv.appendChild(document.createElement("a"));
+  link.href = "https://www.addictinggames.com";
+  link.target = "_blank";
+
+  link.addEventListener("mouseover", () => {
+    agImg.src = "logo/agh.png";
+  });
+  link.addEventListener("mouseout", () => {
+    agImg.src = "logo/ag.png";
+  });
+
+  const agImg = link.appendChild(document.createElement("img"));
+  agImg.src = "logo/ag.png";
+  agImg.style.width = "178px";
+  agImg.style.height = "71px";
+}
+
+
+
 dadd("DOMContentLoaded", () => { 
   q("body").style.backgroundColor = "#100";
-setTimeout(() => {
+const startTheGame = () => {
   let gTime;
 
   //let icons = [];
@@ -27,21 +105,21 @@ dadd("keyup", (e) => {
   delete keys[e.code];
 });
 
-const cutSceneContainer = document.body.appendChild(document.createElement("div"));;
-const cutSceneDiv = cutSceneContainer.appendChild(document.createElement("div"));
-const cds = cutSceneDiv.style;
-cds.position = "absolute";
-cds.left = "50%";
-cds.top = "50px";
-cds.backgroundImage = `url(khan.png)`;
-cds.backgroundSize = "cover";
-cds.width = "400px";
-cds.height = "400px";
-cds.display = "none";
-cds.marginLeft = "-200px";
-cds.zIndex = 1000;
-cds.opacity = 0;
-cds.transition = "opacity 4s";
+// const cutSceneContainer = document.body.appendChild(document.createElement("div"));;
+// const cutSceneDiv = cutSceneContainer.appendChild(document.createElement("div"));
+// const cds = cutSceneDiv.style;
+// cds.position = "absolute";
+// cds.left = "50%";
+// cds.top = "50px";
+// cds.backgroundImage = `url(khan.png)`;
+// cds.backgroundSize = "cover";
+// cds.width = "400px";
+// cds.height = "400px";
+// cds.visibility = "hidden";
+// cds.marginLeft = "-200px";
+// cds.zIndex = 1000;
+// cds.opacity = 0;
+// cds.transition = "opacity 4s";
 const cutSceneText = cutSceneContainer.appendChild(document.createElement("div"));
 cutSceneText.style.position = "absolute";
 cutSceneText.style.left = "50%";
@@ -67,6 +145,7 @@ function showCutScene(series, postCutScene) {
   inCutScene = true;
   onPostCutScene = postCutScene;
   cds.display = "";
+  cds.visibility = "";
   cutSceneText.style.display = "";
   setTimeout(() => {
     cds.opacity = 1;
@@ -97,7 +176,7 @@ function showCutScene(series, postCutScene) {
     }
     cutSceneText.innerHTML = `<span ${highlight?"style=color:white":borte?"style=color:pink":""}>${t1}</span><span style=color:black>${t2}</span>`
       + (`<br><div style=text-align:right;width:100%>${textIndex < text.length ? "💬" : Math.floor(textIndex/5) % 2 === 0 ? "&nbsp;&nbsp;⏩" : "⏩&nbsp;&nbsp;"}</div>`);
-      textIndex++;
+      textIndex+= keys.Space ? 5 : 2;
     canSkipCutScene = textIndex >= text.length;
   }, 50);
 }
@@ -147,6 +226,7 @@ function toggleMuteFX() {
 }
 
 let firstKey = true;
+let fadingCutScene = false;
 
 dadd("keydown", (e) => {
   if (keys[e.code]) {
@@ -158,8 +238,21 @@ dadd("keydown", (e) => {
   if (firstKey) {
     enableAudio();
     firstKey = false;
+
+    console.log("Prepare audio");
+    wildHordeMusic.audio.volume = 0;
+    furEliseMusic.audio.volume = 0;
+    wildHordeMusic.play();
+    furEliseMusic.play();
+    setTimeout(() => {
+      wildHordeMusic.pause();
+      furEliseMusic.pause();  
+      wildHordeMusic.audio.volume = 1;
+      furEliseMusic.audio.volume = 1;
+      }, 10);
+    
   }
-  if(shopDiv.style.display === "") {
+  if(shopOpened) {
     const s = shopList;
 
     let closing = false;
@@ -208,17 +301,19 @@ dadd("keydown", (e) => {
     if (!closing) {
       showShop(true);
     }
-  } else if (cds.display === "" && keys.Space && canSkipCutScene) {
+  } else if (cds.display === "" && keys.Space && canSkipCutScene && !fadingCutScene) {
     if (cutSceneIndex < numCutScene - 1) {
       zzfx(...[1.02,,70,.02,.03,.19,,.18,,-9.1,,,,1.8,,.3,,.51,.09]); // Hit 93
       canSkipCutScene = false;  
       if (fadeOutCutScene) {
         cds.opacity = 0;
+        fadingCutScene = true;
         setTimeout(() => {
+          fadingCutScene = false;
           cutSceneIndex++;
           textIndex = 0;
           cds.opacity = 1;
-        }, 2000);
+        }, 1500);
       } else {
         cutSceneIndex++;
         textIndex = 0;
@@ -229,11 +324,13 @@ dadd("keydown", (e) => {
       cutSceneText.style.display = "none";
       cutSceneText.textContent = "";
       zzfx(...[1.02,,70,.02,.03,.19,,.18,,-9.1,,,,1.8,,.3,,.51,.09]); // Hit 93
+      fadingCutScene = true;
       setTimeout(() => {
+        fadingCutScene = false;
         onPostCutScene?.();
         cds.display = "none";
         inCutScene = false;
-      }, 2000);  
+      }, 1000);  
     }
   }
 
@@ -248,6 +345,7 @@ dadd("keydown", (e) => {
 
 function closeShop() {
   shopDiv.style.display = "none";  
+  shopOpened = false;
 }
 
 const accumulator = [];
@@ -259,6 +357,7 @@ let wildHordeMusic = new Song(wildHorde);
 const wildHordeBackup = wildHordeMusic;
 window.music = wildHordeMusic;
 const furEliseMusic = new Song(furElise);
+
 
 //let startTime = 0;
 // const upgrades = {
@@ -612,10 +711,10 @@ function showMeTheMoney(timer) {
     str += "❤️";
   }
   if (health % 2) {
-    str += "❤️‍🩹";
+    str += halfHeart;
   }
   for (let i = Math.ceil(health / 2); i < maxHealth / 2; i++) {
-    str += "🩶";
+    str += noHeart;
   }
 //  healthDiv.innerText = str;
 
@@ -640,7 +739,7 @@ gods.fontSize = "16pt";
 gods.marginRight = "50px";
 gods.whiteSpace = "pre-wrap";
 gods.pointerEvents = "none";
-gods.backgroundColor = "#33000033";
+gods.backgroundColor = "rgba(51, 0, 0, 0.4)";
 gods.padding = "10px";
 gods.minWidth = "640px";
 
@@ -718,7 +817,7 @@ window.addEventListener("focus", function(event) {
     //   startTime += (gTime - screenPaused);
     // }
     screenPaused = 0;
-    if (!inHut && !hero.dead) {
+    if (!inHut && !hero.dead && gameHasStarted) {
       if (!mute) {
         wildHordeMusic.resume();  
       }
@@ -733,6 +832,8 @@ function startGame() {
     // root = decodeShape(byteArray);
     // console.log(root);
     console.log(root);
+    const load = document.querySelector("#loading-div");
+    load?.parentElement?.removeChild(load);
     loop(0);
 }
 
@@ -904,7 +1005,8 @@ function processMovement(sprite) {
     sprite.dx = sprite.dx * (brake);
     sprite.dy = sprite.dy * (brake);      
   }
-  if (evaluate(sprite.moving, sprite)) {
+  sprite.moving = Math.abs(sprite.dx) > threshold || Math.abs(sprite.dy) > threshold;
+  if (sprite.moving) {
     sprite.x += sprite.dx * dtt;
     sprite.y += sprite.dy * dtt;
   }
@@ -954,7 +1056,7 @@ const sprite = {
     if (!sprite.parent) {
       return;
     }
-    if (inCutScene || shopDiv.style.display === "") {
+    if (inCutScene || shopOpened) {
       return;
     }
     // if (inHut) {
@@ -1020,7 +1122,8 @@ const sprite = {
       sprite.y = Math.max(-cvh / 2, Math.min(sprite.y, cvh / 2));
     }
 
-    const shooting = evaluate(sprite.shooting, sprite);
+    sprite.shooting = keys.Space;
+    const shooting = sprite.shooting;//evaluate(sprite.shooting, sprite);
     if (!shooting) {
       sprite.archerOrientation = sprite.orientation;
     } else if (upgrades.bow) {
@@ -1039,11 +1142,11 @@ const sprite = {
   // speed: .1,
   // speed: .06,
   // speed: .05,
-  speed: sprite => (1 + rage * .2) * (.08 + upgrades.speed * 0.03) * (evaluate(sprite.shooting, sprite) && !upgrades.speedWhileShooting ?
+  speed: sprite => (1 + rage * .2) * (.08 + upgrades.speed * 0.03) * (sprite.shooting && !upgrades.speedWhileShooting ?
     0.5 : 1),
   x: 300, y: 500,
-  moving: sprite => Math.abs(sprite.dx) > threshold || Math.abs(sprite.dy) > threshold,
-  shooting: () => keys.Space,
+//  moving: sprite => Math.abs(sprite.dx) > threshold || Math.abs(sprite.dy) > threshold,
+//  shooting: () => keys.Space,
   ax: () => (keys.KeyA || keys.ArrowLeft ? -1 : 0) + (keys.KeyD || keys.ArrowRight ? 1 : 0),
   ay: () => (keys.KeyW || keys.ArrowUp ? -1 : 0) + (keys.KeyS || keys.ArrowDown ? 1 : 0),
   dx: 0,
@@ -1071,10 +1174,10 @@ const sprite = {
       parent: false,
       sprites: undefined,
       animation: sprite => evaluate(sprite.riderAnimation, sprite),
-      range: sprite => evaluate(sprite.rangeOverride, sprite) ?? (evaluate(sprite.shooting, sprite) ? [0, 3] : [0]),
+      range: sprite => evaluate(sprite.rangeOverride, sprite) ?? (sprite.shooting ? [0, 3] : [0]),
       hotspot: [
-        sprite => evaluate(sprite.moving, sprite) ? .5 - sprite.orientation * evaluate(sprite.archerOrientation, sprite) * .05 : .53,
-        sprite => evaluate(sprite.moving, sprite) ? .65 + Math.sin(sprite.horseFrame * .7) / 100 : .7,
+        sprite => sprite.moving ? .5 - sprite.orientation * evaluate(sprite.archerOrientation, sprite) * .05 : .53,
+        sprite => sprite.moving ? .65 + Math.sin(sprite.horseFrame * .7) / 100 : .7,
       ],
       color: sprite => evaluate(sprite.foeColor, sprite)  ?? (sprite.corpse ? sprite.color : sprite.hut ? "#af8" : sprite.tree ? "#270" : "black"),
       direction: (sprite) => Math.sign(evaluate(sprite.archerOrientation, sprite)),
@@ -1088,7 +1191,7 @@ const sprite = {
       parent: false,
       sprites: undefined,
       animation: sprite => sprite.hut ? "hut" : "horse",
-      range: (sprite) => sprite.hut ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
+      range: (sprite) => sprite.hut ? [0] : sprite.moving ? [0, 10]: [11],
       hotspot: [.47, .72],
       color: sprite => sprite.borte ? "#f98" : sprite.hut && hutInfo(sprite).closed ? "#ba6" : sprite.superSoldier ? "#a08" : sprite.foe ? "#004" : "#630",
       direction: (sprite) => Math.sign(sprite.orientation),
@@ -1117,47 +1220,41 @@ const sprite = {
       parent: false,
       sprites: undefined,
       animation: sprite => sprite.soldier ? "soldier" : sprite.corpse ? "dead" : sprite.hut ? "hut" : sprite.tree ? "tree" : "horse",
-      range: (sprite) => sprite.corpse ? evaluate(sprite.rangeOverride, sprite) : sprite.tree ? [0] : evaluate(sprite.moving, sprite) ? [0, 10]: [11],
+      range: (sprite) => sprite.corpse ? evaluate(sprite.rangeOverride, sprite) : sprite.tree ? [0] : sprite.moving ? [0, 10]: [11],
 
 //      range: sprite => sprite.rangeOverride ?? (evaluate(sprite.shooting, sprite) ? [0, 3] : [0]),
 
       hotspot: (sprite) => sprite.tree ? [.53, 1] : [.47, .72],
-      color: "#999",
+      color: () => "#999",
       direction: (sprite) => Math.sign(sprite.orientation),
       height: -50,
       frame: (sprite) => evaluate(sprite.horseFrame, sprite),
       hidden: sprite => sprite.dead && sprite.soldier,
     }, sprite),
-    ...new Array(5).fill(
-      sprite => evaluate({
-        ...sprite,
-        process: undefined,
-        cache: false,
-        parent: false,
-        sprites: undefined,
-        animation: "shield",
-        random: 150,
-        range: [0],
-        hotspot: [.47 + rando() - .5, 5],
-        width: 200,
-        height: 30,
-        color: () => rando() < .5 ? "gold" : "red",
-        direction: (sprite) => Math.sign(sprite.orientation),
-        frame: () => 0,
-        active: sprite => sprite.hut && hutInfo(sprite).onFire,
-      }, sprite)
-    ),
   ],
 };
+
+let coll = false;
+const GG = "gold", RR = "red";
 
 function evaluate(value, sprite) {
   if (typeof(value) === "object") {
     if (Array.isArray(value)) {
-      return value.map(v => evaluate(v, sprite));
+      const AA = [];
+      AA.length = value.length;
+      for (let i = 0; i < value.length; i++) {
+        AA[i] = evaluate(value[i], sprite);
+      }
+      return AA;
+      // return value.map(v => evaluate(v, sprite));
     } else {
       const o = {};
-      for (let i in value) {
-        o[i] = evaluate(value[i], sprite);
+      const active = evaluate(value.active, sprite);
+      if (active) {
+        o.active = active;
+        for (let i in value) {
+          o[i] = evaluate(value[i], sprite);
+        }  
       }
       return o;
     }
@@ -1421,6 +1518,10 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
   //   console.log(superSoldier, soldier);    
   // }
 
+  const RANGE_NO_MOVING = [0];
+  const RANGE_SOLDIER = [0, 4];
+  const RANGE_RANGE = [0, 3];
+
   const x = cos * (2000 + rando()*1000);
   const y = sin * (2000 + rando()*1000);
   const mySpeed = soldier ? Math.max(.01, rando() / 20) : Math.max(.03, rando() / 10);//soldierSuperSpeed
@@ -1437,7 +1538,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
     ay: (sprite) => (sprite.goal[1] - foe.y) / 2000,
     x,
     y,
-    rangeOverride: sprite => !evaluate(sprite.moving, sprite) ? [0] : soldier ? [0, 4] : [0, 3],
+    rangeOverride: sprite => !sprite.moving ? RANGE_NO_MOVING : soldier ? RANGE_SOLDIER : RANGE_RANGE,
     // speed: Math.max(.03, Math.random() / 15),//sprite => 10 / (evaluate(sprite.gdist, sprite) + 1),
     //  HARD vvv
     speed: () => mySpeed * soldierSuperSpeed,
@@ -1568,35 +1669,36 @@ function canBuy(item) {
   return item.cost?.length && money >= evaluate(item.cost[0]) * costMul;
 }
 
-const shopDiv = document.body.appendChild(document.createElement("div"));
-const sds = shopDiv.style;
-sds.position = "absolute";
-sds.left = "200px";
-sds.top = "150px"
-sds.display = "none";
+// const shopDiv = document.body.appendChild(document.createElement("div"));
+// const sds = shopDiv.style;
+// sds.position = "absolute";
+// sds.left = "200px";
+// sds.top = "150px"
+// // sds.display = "none";
+// sds.visibility = "hidden";
 
-function addAG() {
-  const agDiv = shopDiv.appendChild(document.createElement("div"));
-  agDiv.style.position = "fixed";
-  agDiv.style.right = "10px";
-  agDiv.style.bottom = "10px";
-  agDiv.style.zIndex = 1000;
-  const link = agDiv.appendChild(document.createElement("a"));
-  link.href = "https://www.addictinggames.com";
-  link.target = "_blank";
+// function addAG() {
+//   const agDiv = shopDiv.appendChild(document.createElement("div"));
+//   agDiv.style.position = "fixed";
+//   agDiv.style.right = "10px";
+//   agDiv.style.bottom = "10px";
+//   agDiv.style.zIndex = 1000;
+//   const link = agDiv.appendChild(document.createElement("a"));
+//   link.href = "https://www.addictinggames.com";
+//   link.target = "_blank";
 
-  link.addEventListener("mouseover", () => {
-    agImg.src = "logo/agh.png";
-  });
-  link.addEventListener("mouseout", () => {
-    agImg.src = "logo/ag.png";
-  });
+//   link.addEventListener("mouseover", () => {
+//     agImg.src = "logo/agh.png";
+//   });
+//   link.addEventListener("mouseout", () => {
+//     agImg.src = "logo/ag.png";
+//   });
 
-  const agImg = link.appendChild(document.createElement("img"));
-  agImg.src = "logo/ag.png";
-  agImg.style.width = "178px";
-  agImg.style.height = "71px";
-}
+//   const agImg = link.appendChild(document.createElement("img"));
+//   agImg.src = "logo/ag.png";
+//   agImg.style.width = "178px";
+//   agImg.style.height = "71px";
+// }
 
 const shopDivs = new Array(6).fill(null).map(() => {
   const s = shopDiv.appendChild(document.createElement("div"));
@@ -1610,6 +1712,7 @@ const shopDivs = new Array(6).fill(null).map(() => {
 const purchased = shopDivs.map(() => null);
 let shopIndex = 0;
 let shopList = [];
+let shopOpened = false;
 function showShop(refresh) {
   if (!refresh) {
     shopIndex = 0;
@@ -1624,7 +1727,9 @@ function showShop(refresh) {
     shopList = [...shop].filter(canBuy).slice(0, shopDivs.length-1);
   }
   const s = shopList;
+  shopOpened = true;
   shopDiv.style.display = "";
+  shopDiv.style.visibility = "";
   for (let i = 0; i < shopDivs.length; i++) {
     if (!refresh) {
       purchased[i] = false;
@@ -1648,12 +1753,16 @@ function showShop(refresh) {
 //window.showShop = showShop;
 
 
-
+let gameHasStarted = false;
 let nearHut = null;
 
 let inHut = null;
 
 const huts = {};
+
+function calcTag(sprite) {
+  return `${sprite.cellX}_${sprite.cellY}_${sprite.index}`;
+}
 
 const treeCount = 200; //  DENSE
 // const treeCount = 30;
@@ -1667,6 +1776,8 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
   const tree = {
     ...copy(sprite),
     cache: true,
+    ax: () => 0,
+    ay: () => 0,
     x: isHut ? index * repeatDistance : 1000 + rando() * 4000,
     y: isHut ? index * repeatDistance / 2 : rando() * 4000,
     cellX: 0,
@@ -1685,6 +1796,7 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
 //        console.log("TREE", hdist);
         if (isHut && !hutInfo(sprite).closed) {
           if (!inHut) {
+            gameHasStarted = true;
             showText("");
             zzfx(...[1.99,,238,,.08,.14,2,0,,-47,-84,,.15,,,.6,.15,,,.17]); // Event
             inHut = sprite;
@@ -1738,6 +1850,8 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
         sprite.y += repeatDistance;
         sprite.cellY++;
       }
+      sprite.tag = calcTag(sprite);
+
     },
     foe: true,
     width: (isHut ? 600 : 500) * zoom,
@@ -1748,6 +1862,29 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
     hut: isHut,
     rangeOverride: isHut ? [1] : undefined,
   };
+
+  if (tree.hut) {
+    tree.sprites.push(...new Array(3).fill(
+      sprite => evaluate({
+        ...sprite,
+        process: undefined,
+        cache: false,
+        parent: false,
+        sprites: undefined,
+        animation: "shield",
+        random: 150,
+        range: [0],
+        hotspot: [.47 + rando() - .5, 5],
+        width: 200,
+        height: 30,
+        color: () => (coll = !coll) ? GG : RR,
+        direction: (sprite) => Math.sign(sprite.orientation),
+        frame: () => 0,
+        active: sprite => sprite.hut && hutInfo(sprite).onFire,
+      }, sprite)
+    ));
+  }
+
   return tree;
 });
 
@@ -1761,9 +1898,11 @@ window.findBorte = findBorte;
 
 let borte = {...sprite,
   borte: true,
-  foeColor: "red",
+  foeColor: () => "red",
   active: () => foundBorte,//upgrades.borte,
   shootPeriod: 1000,
+  ax: sprite => sprite.dd > 300 ? (hero.x - sprite.x) * .01 : 0,
+  ay: sprite => sprite.dd > 300 ? (hero.y - sprite.y) * .01 : 0,
   process: sprite => {
     if (!sprite.parent || !evaluate(sprite.active, sprite)) {
       return;
@@ -1771,13 +1910,14 @@ let borte = {...sprite,
     const ddx = hero.x - sprite.x;
     const ddy = hero.y - sprite.y;
     const dd = disto(ddx, ddy);// Math.sqrt(ddx * ddx + ddy * ddy);
-    if(dd > 300) {
-      sprite.ax = ddx * .01;
-      sprite.ay = ddy * .01;  
-    } else {
-      sprite.ax = 0;
-      sprite.ay = 0;
-    }
+    sprite.dd = dd;
+    // if(dd > 300) {
+    //   sprite.ax = ddx * .01;
+    //   sprite.ay = ddy * .01;  
+    // } else {
+    //   sprite.ax = 0;
+    //   sprite.ay = 0;
+    // }
     if (dd > .1) {
       addDust(sprite);
     }
@@ -1794,8 +1934,7 @@ let borte = {...sprite,
 
 let hutLevel = 0;
 function hutInfo(sprite) {
-  const tag = `${sprite.cellX}_${sprite.cellY}_${sprite.index}`;
-  return huts[tag] ?? (huts[tag] = {});
+  return huts[sprite.tag] ?? (huts[sprite.tag] = {});
 }
 
 function distSq(a, b) {
@@ -2075,8 +2214,11 @@ function drawGround() {
 
 startGame();
 
+
+
+};
 addAG();
-
-
-}, 3000);
+window.addEventListener("load", () => {
+  setTimeout(startTheGame, 1000);
+});
 }); /// END

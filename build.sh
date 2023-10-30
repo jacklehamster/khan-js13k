@@ -14,7 +14,7 @@ npx roadroller temp/gg.js -o release/gg.js
 cp play.html release/index.html
 cp game.css release
 cp rider.13k release
-cp gamefont.ttf release
+cp gamefont.woff2 release
 cp khan.png release
 cp logo/*.* release/logo
 

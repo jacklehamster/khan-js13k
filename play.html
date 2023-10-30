@@ -1,9 +1,13 @@
 <meta charset="UTF-8">
+<link rel="preload" as="font" href="gamefont.woff2" type="font/woff2" crossorigin="anonymous">
 <link rel="stylesheet" href="game.css">
 <html>
-    <div class="gameview">
-        <h1 id="title" style="position: absolute; top: 35%;">The Terror of Mongolia</h1>
-        <canvas style="opacity: 0"></canvas>
-    </div>
-    <script src=gg.js></script>
+    <body style="background-color: black;">
+        <div id="loading-div" class="blink_me" style="font-family: Arial, Helvetica, sans-serif;">Loading...</div>
+        <div class="gameview">
+            <h1 id="title" style="position: absolute; top: 35%;">The Terror of Mongolia</h1>
+            <canvas style="opacity: 0"></canvas>
+        </div>
+        <script src=gg.js></script>    
+    </body>
 </html>
