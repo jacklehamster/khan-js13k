@@ -211,6 +211,7 @@ let mute;
 function toggleMute() {
   if (wildHordeMusic.playing) {
     mute = !mute;
+    window.mute = mute;
     console.log("Mute", mute);
     if (mute) {
       wildHordeMusic.pause();  
@@ -423,7 +424,7 @@ const shop = [
     tag: "🏵️", color: "#008000"},
   { name: "rickoShot", title: "ricoshot", description: () => `New shooting technique.\nYour shots have +${30 * (upgrades.rickoShot + 1)}% chance to ricochet.`, cost: [1.5, 2, 3], req: "bow", buy,
     tag: "RS", color: "#7B68EE"},
-  { name: "giantPiercing", title: "giant piercing", description: () => `Sharpened arrows increases the chance of killing a giant from ${5 + 20 * (upgrades.giantPiercing)} to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy,
+  { name: "giantPiercing", title: "giant piercing", description: () => `Sharpened arrows increases the chance of killing a giant from ${5 + 20 * (upgrades.giantPiercing)}% to ${5 + 20 * (upgrades.giantPiercing+1)}%`, cost: [1, 2, 3], req: "bow", buy,
     tag: "GP", color: "#A52A2A"},
   { name: "treeNav", title: "forest navigation", description: () => `A compass to help navigate more easily in the forest (${repeatString("⭐", upgrades.treeNav + 1)})`, cost: [1, 2, 3], buy,
     tag: "FN", color: "#228B22"},
@@ -538,6 +539,7 @@ const hutUpgrades = [
       zzfx(...[1.99,,238,,.08,.14,2,0,,-47,-84,,.15,,,.6,.15,,,.17]); // Event
       showText("Before going further, purchase some items to help on your journey.");
       showShop();  
+      unlockMedal("Second hut");
     });
   },
   standardLevelUp,
@@ -565,7 +567,9 @@ const hutUpgrades = [
       ], () => {
       zzfx(...[1.99,,238,,.08,.14,2,0,,-47,-84,,.15,,,.6,.15,,,.17]); // Event
       showText("The timer stopped. Now ride alongside <b>Börte</b> and find <b>Jamukha.</b>");
-      showShop();  
+      showShop();
+      
+      unlockMedal("Rescue Börte");
     });
 
     
@@ -603,7 +607,8 @@ const hutUpgrades = [
         ], () => {
           zzfx(...[1.99,,238,,.08,.14,2,0,,-47,-84,,.15,,,.6,.15,,,.17]); // Event
           showText("<b>Congratulations!</b> You beat the game.\n<span style=font-size:14pt>Feel free keep going, see how far you go. You no longer have revival option, <b>death is now permanent</b>. Each new yurt visited still increase the game's difficulty.</span>\n<b style=color:#FFD700>Good luck, Khan. May the spirits of the steppe guide your path.</b>");
-          showShop();  
+          showShop();
+          unlockMedal("THE END");  
         });
         beatGame = true;
         wildHordeMusic = wildHordeBackup;
@@ -696,10 +701,12 @@ function showUpgrades(hideOne) {
 
 let now = () => foundBorte || Math.max(inHut ? inHut.enteredHut : (screenPaused || lastframeTime));
 
+let millitick = 0;
 let tick = 0;
 function showMeTheMoney(timer) {
   if (timer && !screenPaused && !inCutScene && !inHut && !foundBorte && !hero.dead) {
     tick++;
+    millitick = gTime;
 
     if (timeLimit - tick < 30 && timer) {
       zzfx(...[2.12,,1025,.01,.01,0,2,.01,29,,,,.01,,-0.9,,.05,.72,.01,.16]); // Blip 100    
@@ -733,7 +740,7 @@ setInterval(showMeTheMoney, 1000, true);
 const gameOverDiv = document.body.appendChild(document.createElement("div"));
 const gods = gameOverDiv.style;
 gods.position = "absolute";
-gods.top = canvas.offsetTop + 30;
+gods.top = canvas.offsetTop + 10;
 gods.left = canvas.offsetLeft + 150;
 gods.fontSize = "16pt";
 gods.marginRight = "50px";
@@ -772,6 +779,9 @@ function showGameOver() {
     bestScore = finalScore;
     localStorage.setItem("bestScore", bestScore);
   }
+  postScore(finalScore, "High score");
+  postScore(money * 100, "Dying rich!");
+
   showText("<div style='font-size: 24pt'><b>GAME OVER, KHAN</b></div><div style='font-size: 18pt'>" 
     + "\n<b>LEVEL</b>: " + hutLevel + ` (+ ${hutLevel * pointsPerLevel})`
     + "\n<b>UPGRADES</b>: " + upgradesCount + ` (+ ${upgradesCount * pointsPerUpgrade})`
@@ -1014,6 +1024,11 @@ function processMovement(sprite) {
   sprite.horseFrame += dtt * Math.max(.08, dist / 50);
 }
 
+let unlockPerfectShot = false;
+let unlockedShotless = false;
+let unlockedFastRescue = false;
+let unlockUntouchable = false;
+let unlockOneLife = false;
 let onExit = null;
 function exitHut(hut) {
   // if (!foundBorte) {
@@ -1023,6 +1038,34 @@ function exitHut(hut) {
   //     startTime += (lastframeTime - inHut.enteredHut);
   //   }  
   // }
+
+  if (!shotsTaken && beatGame && !unlockedShotless) {
+    unlockedShotless = true;
+    unlockMedal("Shotless");
+  }
+
+  if (shotsTaken && !missedShot && beatGame && !unlockPerfectShot) {
+    unlockPerfectShot = true;
+    unlockMedal("Perfect shot");
+  }
+
+  if (foundBorte && !beatGame && !unlockedFastRescue) {
+    const s = Math.max(0, timeLimit - tick);//Math.floor((now() - startTime) / 1000));
+    if (s/60 >= 2) {
+      unlockedFastRescue = true;
+      unlockMedal("Speedy mission success");
+    }
+  }
+
+  if (beatGame && !hitCount && !unlockUntouchable) {
+    unlockUntouchable = true;
+    unlockMedal("Untouchable");
+  }
+
+  if (beatGame && !revival && !unlockOneLife) {
+    unlockOneLife = true;
+    unlockMedal("You live only once");
+  }
 
   hero.x = hut.x;
   hero.y = hut.y + 200;
@@ -1262,6 +1305,8 @@ function evaluate(value, sprite) {
   return typeof(value) === "function" ? value(sprite) : value;
 }
 
+let killedGiants = 0;
+
 function doHitFoe(hitFoe) {
   const bonus = Math.floor((hitFoe.superSoldier ? 25 : Math.floor(2 + Math.random()*4)) * (1 + .5 * upgrades.money));
   bubbles.add({
@@ -1273,7 +1318,12 @@ function doHitFoe(hitFoe) {
   for (let i = Math.floor(Math.random() * 10 + 10) * (hitFoe.superSoldier ? 3 : 1); i > 0; i--) {
     addBlood(hitFoe);
   }
-
+  if (hitFoe.superSoldier) {
+    killedGiants++;
+    if (killedGiants === 13) {
+      unlockMedal("Headhunter");
+    }
+  }
 
 
   money += bonus;
@@ -1502,6 +1552,8 @@ function lifeCheck() {
   }
 }
 
+let hitCount = 0;
+
 //  EASY vvvv
 let foesTotal = 0;
 // const foesLength = 20;
@@ -1579,6 +1631,7 @@ const foes = new Array(foesLength).fill(0).map((_, index) => {
             hero.lastBlock = gTime;
             zzfx(...[1.75,,279,,.02,.09,,.76,-3.5,.3,,,,.2,,.3,.01,.93,.01,.12]); // Shield
           } else {
+            hitCount++;
             cs.backgroundColor = "#a00";
             health = Math.max(0, health - (superSoldier ? 2 : 1));
             showMeTheMoney();
@@ -1888,11 +1941,16 @@ const trees = new Array(treeCount).fill(0).map((_, index) => {
   return tree;
 });
 
+function unlockMedal(name) {
+  window?.getMedal(name);
+}
+
 function findBorte() {
   foundBorte = gTime;//now();
   borte.x = hero.x;
   borte.y = hero.y;
   wildHordeMusic = furEliseMusic;
+  postScore(tick * 1000 + Math.max(0, Math.min(gTime - millitick, 999)), "Fastest rescue");
 }
 window.findBorte = findBorte;
 
