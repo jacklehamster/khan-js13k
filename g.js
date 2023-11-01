@@ -620,7 +620,8 @@ const hutUpgrades = [
           const message = `<b>Level: ${hutLevel}</b>\nLet's see how much further you can go!`;
           // gameOverDiv.textContent = `Level ${hutLevel}\nWelcome`;
           showText(message);
-          showShop();  
+          showShop();
+          difficultyPlus++;
         });
       }
     foesTotal = Math.min(foesTotal + 50, 400);
@@ -669,6 +670,9 @@ uds.pointerEvents = "none";
 uds.display = "flex";
 uds.flexDirection = "column";
 
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","XI","X","XI","XII","XIII"];
+
+
 let itemToHide = 0;
 function showUpgrades(hideOne) {
   upgradeDiv.textContent = "";
@@ -693,7 +697,7 @@ function showUpgrades(hideOne) {
       tagDiv.style.boxShadow = "2px 2px black";
       tagDiv.style.textAlign = "center";
       tagDiv.style.margin = "2px";
-      tagDiv.textContent = `${shopItem.tag}${upgrades[shopItem.name] > 1 ? " " + repeatString("I", upgrades[shopItem.name]) : ""}`;
+      tagDiv.textContent = `${shopItem.tag}${upgrades[shopItem.name] > 1 ? " " + (ROMAN[upgrades[shopItem.name]] ?? upgrades[shopItem.name]) : ""}`;
     }
   });
 }
@@ -1330,6 +1334,8 @@ function doHitFoe(hitFoe) {
   showMeTheMoney();
 }
 
+let difficultyPlus = 0;
+
 function showSprite(sprite, accumulator) {
   const sprites = evaluate(sprite.sprites, sprite);
   sprites.forEach(sprite => {
@@ -1358,7 +1364,7 @@ function showSprite(sprite, accumulator) {
       for (let i = arrowSize - 1; i >= 0; i--) {
         const arrow = arrows[i];
         if (arrow.x - sh[0] > left && arrow.x - sh[0] < right && arrow.y - sh[1] > top && arrow.y - sh[1] < bottom) {
-          const hit = superSoldier ? rando() < (.05 + (.2 * upgrades.giantPiercing)) : true;
+          const hit = (superSoldier ? rando() < (.05 + (.2 * upgrades.giantPiercing)) : true) && (Math.random() * difficultyPlus < 1);
           const hitFoe = foes[foeIndex];
           if (hit) {
             hitFoe.dead = gTime;    
@@ -1386,7 +1392,7 @@ function showSprite(sprite, accumulator) {
             hitFoe.hitTime = gTime;
           }
 
-          if (rando() < upgrades.rickoShot * .3 * (hit ? 1 : 1.5)) {
+          if (rando() < upgrades.rickoShot * .3 * (hit ? 1 : 1.2)) {
             arrow.dx *= (rando() - .5);
             arrow.dy = - Math.abs(arrow.dy)* .8;
             arrow.hero = false;
