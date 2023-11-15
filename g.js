@@ -1087,7 +1087,7 @@ dadd('DOMContentLoaded', () => {
           (foundBorteBonus ? '\n<b>RESCUED BÖRTE</b>: ⌛ ' + timeRemaining +
                    ` (+ ${foundBorteBonus})` :
                              '') +
-          '\n<b>BASE SCORE</b>: = ' + baseScore +
+          '\n<b>BASE SCORE</b> = ' + baseScore +
           (!shotsTaken ? '\n<b>SHOTLESS</b>: ' :
                          '\n<b>ACCURACY</b>: ' +
                    parseFloat((100 * accuracy).toFixed(1)) + '%') +
@@ -1591,9 +1591,9 @@ dadd('DOMContentLoaded', () => {
                       parent: false,
                       sprites: undefined,
                       animation: sprite => sprite.hut ? 'hut' : 'horse',
-                      range: (sprite) => sprite.hut ? [0] :
-                          sprite.moving             ? [0, 10] :
-                                                      [11],
+                      range: (sprite) => sprite.hut     ? [0] :
+                          sprite.moving && !sprite.dead ? [0, 10] :
+                                                          [11],
                       hotspot: [.47, .72],
                       color: sprite => sprite.borte            ? '#f98' :
                           sprite.hut && hutInfo(sprite).closed ? '#ba6' :
@@ -1994,7 +1994,7 @@ dadd('DOMContentLoaded', () => {
       }, 150);
 
       if (!health) {
-        addCorpse(hero, (hero.x - sprite.x) * 2, hero.color);
+        addCorpse(hero, -Math.sign(hero.orientation || 1) * 100, hero.color);
         hero.dead = gTime;
         showGameOver();
         wildHordeMusic.stop();
@@ -2661,7 +2661,7 @@ dadd('DOMContentLoaded', () => {
 
 
       if (!health) {
-        const deathTime = Math.min(.7, (time - hero.dead) / 3000);
+        const deathTime = Math.min(.7, (gTime - hero.dead) / 3000);
         ctx.fillStyle = `rgb(200,0,0,${deathTime})`;
         ctx.fillRect(0, 0, cvw, cvh);
         ctx.fill();
