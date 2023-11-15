@@ -2784,7 +2784,7 @@ dadd('DOMContentLoaded', () => {
   };
 
   //  Uncomment when released on AG.
-  // addAG();
+  addAG();
 
   window.addEventListener('load', () => {
     setTimeout(startTheGame, 1000);
