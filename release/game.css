@@ -45,3 +45,35 @@ pink {
       color: red;
     }
 }
+
+button {
+    width: 150px; /* adjust as needed */
+    height: 40px; /* adjust as needed */
+    background-color: #A67B5B; /* Dark beige (Peru color) */
+    border: none;
+    border-radius: 20px; /* rounded corners */
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); /* shadow effect */
+}
+
+button:hover {
+    background-color: #F5F5DC; /* lighter beige color on hover */
+    color: black;
+}
+
+button:disabled {
+    background-color: #D2B48C; /* Taupe color when disabled */
+    cursor: not-allowed; /* cursor indicates the button is disabled */
+    color: white;
+    opacity: .5;
+}
+
+button:disabled:hover {
+    background-color: #D2B48C; /* No change in color on hover when disabled */
+}

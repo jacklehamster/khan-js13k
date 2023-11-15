@@ -186,11 +186,12 @@ dadd('DOMContentLoaded', () => {
                     borte ?
                     'style=color:pink' :
                     ''}>${t1}</span><span style=color:black>${t2}</span>` +
-            (`<br><div style=text-align:right;width:100%>${
+            (`<br><br><div style=text-align:right;width:100%>${
                 textIndex < text.length ? '💬' :
-                    Math.floor(textIndex / 5) % 2 === 0 ?
-                                          '&nbsp;&nbsp;⏩' :
-                                          '⏩&nbsp;&nbsp;'}</div>`);
+                                          '[press space to continue] ' +
+                        (Math.floor(textIndex / 5) % 2 === 0 ?
+                             '&nbsp;&nbsp;⏩' :
+                             '⏩&nbsp;&nbsp;')}</div>`);
         textIndex += keys.Space ? 5 : 2;
         canSkipCutScene = textIndex >= text.length;
       }, 50);
@@ -1011,6 +1012,29 @@ dadd('DOMContentLoaded', () => {
     gods.padding = '10px';
     gods.minWidth = '640px';
 
+    const gameOverBox =
+        document.body.appendChild(document.createElement('div'));
+    gameOverBox.style.position = 'absolute';
+    gameOverBox.style.bottom = 50;
+    gameOverBox.style.left = canvas.offsetLeft + 50;
+    const restartButton =
+        gameOverBox.appendChild(document.createElement('button'));
+    restartButton.textContent = 'Start over';
+    restartButton.addEventListener('click', () => {
+      window.location.reload();
+    });
+    let reviving = false;
+    const reviveButton =
+        gameOverBox.appendChild(document.createElement('button'));
+    reviveButton.textContent = 'Revive (ESC)';
+    reviveButton.addEventListener('click', () => {
+      reviving = true;
+      setTimeout(() => {
+        reviving = false;
+      }, 1000);
+    });
+    gameOverBox.style.display = 'none';
+
 
     const pointsPerShopBonus = 5000;
 
@@ -1050,6 +1074,8 @@ dadd('DOMContentLoaded', () => {
       postScore(finalScore, 'High score');
       postScore(money * 100, 'Dying rich!');
 
+      gameOverBox.style.display = 'block';
+      reviveButton.disabled = !canContinue();
       showText(
           '<div style=\'font-size: 24pt\'><b>GAME OVER, KHAN</b></div><div style=\'font-size: 18pt\'>' +
           '\n<b>LEVEL</b>: ' + hutLevel + ` (+ ${hutLevel * pointsPerLevel})` +
@@ -1403,7 +1429,9 @@ dadd('DOMContentLoaded', () => {
         //   //   return;
         //   // }
         // }
-        if (!health && keys.Escape && canContinue() && !shuffling) {
+        if (!health && (keys.Escape || reviving) && canContinue() &&
+            !shuffling) {
+          gameOverBox.style.display = 'none';
           shuffling = true;
           let suspense = Math.max(10, Object.values(upgrades).length * 2);
           const interval = setInterval(() => {
