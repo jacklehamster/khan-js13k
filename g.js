@@ -1591,9 +1591,9 @@ dadd('DOMContentLoaded', () => {
                       parent: false,
                       sprites: undefined,
                       animation: sprite => sprite.hut ? 'hut' : 'horse',
-                      range: (sprite) => sprite.hut     ? [0] :
-                          sprite.moving && !sprite.dead ? [0, 10] :
-                                                          [11],
+                      range: (sprite) => sprite.hut ? [0] :
+                          sprite.moving             ? [0, 10] :
+                                                      [11],
                       hotspot: [.47, .72],
                       color: sprite => sprite.borte            ? '#f98' :
                           sprite.hut && hutInfo(sprite).closed ? '#ba6' :
@@ -1996,6 +1996,7 @@ dadd('DOMContentLoaded', () => {
       if (!health) {
         addCorpse(hero, -Math.sign(hero.orientation || 1) * 100, hero.color);
         hero.dead = gTime;
+        hero.moving = false;
         showGameOver();
         wildHordeMusic.stop();
       }
