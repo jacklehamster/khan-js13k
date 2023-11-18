@@ -1073,6 +1073,7 @@ dadd('DOMContentLoaded', () => {
       }
       postScore(finalScore, 'High score');
       postScore(money * 100, 'Dying rich!');
+      postScore(hutLevel, 'Highest level');
 
       gameOverBox.style.display = 'block';
       reviveButton.disabled = !canContinue();
@@ -2784,7 +2785,7 @@ dadd('DOMContentLoaded', () => {
   };
 
   //  Uncomment when released on AG.
-  addAG();
+  // addAG();
 
   window.addEventListener('load', () => {
     setTimeout(startTheGame, 1000);
