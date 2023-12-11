@@ -95,14 +95,22 @@ dadd('DOMContentLoaded', () => {
     let ctx = canvas.getContext('2d');
     let cs = canvas.style;
     let cvw = canvas.width = 2000;
-    cs.width = `100%`;  //`${cvw/2}px`;
+    cs.width = '1000px';
+    // cs.width = `100vw`;  //`${cvw/2}px`;
     let cvh = canvas.height = 1200;
-    cs.height = `100%`;  //`${cvh/2}px`;
+    //    cs.height = `100vh`;  //`${cvh/2}px`;
+    cs.height = '600px';
     cs.border = '1px solid black';
     cs.backgroundColor = '#efd';
     setTimeout(() => cs.opacity = 1, 1000);
     ctx.font = 'bold 40px gamefont';  //"bold 34px gamefont";
 
+    function resize() {
+      document.body.style.zoom = Math.min(1, (window.innerHeight - 10) / 600);
+      sds.left = `${canvas.offsetLeft + 200}px`;
+    }
+    resize();
+    window.addEventListener('resize', resize);
 
     const costMul = 100;
     const zoom = .75;
@@ -567,7 +575,8 @@ dadd('DOMContentLoaded', () => {
       {
         name: 'time',
         title: 'extra time',
-        description: 'In exchange of 🏵️, I will delay the boat (⏳ +30s)',
+        description:
+            'In exchange of 🏵️, I will delay the caravan (⏳ +30s to find Börte)',
         cost: [1, 2, 3, 4, 5, 6],
         buy: item => {
           //    startTime += 20000;
@@ -683,14 +692,14 @@ dadd('DOMContentLoaded', () => {
       () => {
         foesTotal = 20;
         // const text = `“Spare my life, Khan! I will help you find Börte.\nYou
-        // should hurry! Jamukha plans to send her away on a boat.”`;
+        // should hurry! Jamukha plans to send her away on a caravan.”`;
         showCutScene(
             [
               [3, '...'],
               [0, `“Spare my life, Khan! I'll help you find Börte.”`],
               [
                 0,
-                `“You should hurry! Jamukha plans to send her away on a boat.”`
+                `“You should hurry! Jamukha plans to send her away on a caravan.”`
               ],
               [0, `“Rescue Börte before time runs out!”`, false, false, true],
             ],
@@ -703,8 +712,8 @@ dadd('DOMContentLoaded', () => {
               showShop();
             });
         //    const text = `Spare my life, Khan! I'll help you find Börte.\nYou
-        //    should hurry! Jamukha plans to send her away on a boat.\nTake one
-        //    item, then follow the sign.`;
+        //    should hurry! Jamukha plans to send her away on a caravan.\nTake
+        //    one item, then follow the sign.`;
 
 
         // for (hutLevel++;hutLevel < hutUpgrades.length; hutLevel++) {
@@ -890,14 +899,14 @@ dadd('DOMContentLoaded', () => {
     mds.top = canvas.offsetTop + 25;
     mds.left = canvas.offsetLeft + 40;
     mds.color = '#880';
-    mds.fontSize = '14pt';
+    mds.fontSize = '20pt';
     mds.whiteSpace = 'pre-wrap';
     mds.pointerEvents = 'none';
 
     const upgradeDiv = document.body.appendChild(document.createElement('div'));
     const uds = upgradeDiv.style;
     uds.position = 'absolute';
-    uds.top = canvas.offsetTop + 150;
+    uds.top = canvas.offsetTop + 170;
     uds.left = canvas.offsetLeft + 40;
     uds.pointerEvents = 'none';
     uds.display = 'flex';
