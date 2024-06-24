@@ -1,16 +1,17 @@
-<meta charset="UTF-8">
-<link rel="preload" as="font" href="gamefont.woff2" type="font/woff2" crossorigin="anonymous">
-<link rel="stylesheet" href="game.css">
-<!-- AG START -->
-<!-- <script type="text/javascript" src="https://swagapi.shockwave.com/dist/swag-api.js"></script>
-<link rel="stylesheet" type="text/css" href="https://swagapi.shockwave.com/dist/swag-api.css"> -->
-<!-- AG END -->
-<html>
-    <body style="background-color: black;">
-        <div id="loading-div" class="blink_me" style="font-family: Arial, Helvetica, sans-serif;">Loading...</div>
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>The Terror of Mongolia</title>
+        <link rel="preload" as="font" href="gamefont.woff2" type="font/woff2" crossorigin="anonymous">
+        <link rel="stylesheet" href="game.css">
+    </head>
+    <body>
+        <div id="loading-div" class="blink_me loading-div">Loading...</div>
         <div class="gameview">
-            <h1 id="title" style="position: absolute; top: 35%;">The Terror of Mongolia</h1>
-            <canvas style="opacity: 0"></canvas>
+            <h1 id="title" class="game-title">The Terror of Mongolia</h1>
+            <canvas class="start-hidden"></canvas>
         </div>
         <script src="external/newgrounds/newgroundsio.min.js"></script>
         <script src="lib/ng.js"></script>

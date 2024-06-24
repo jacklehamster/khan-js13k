@@ -5,6 +5,7 @@
 body {
     color: silver;
     font-family: "gamefont", Verdana, Tahoma;
+    background-color: black;
 }
 canvas {
     margin: auto;
@@ -76,4 +77,16 @@ button:disabled {
 
 button:disabled:hover {
     background-color: #D2B48C; /* No change in color on hover when disabled */
+}
+
+.loading-div {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.game-title {
+    position: absolute; top: 35%;
+}
+
+.start-hidden {
+    opacity: 0
 }
