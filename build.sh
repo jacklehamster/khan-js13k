@@ -20,7 +20,16 @@ cp logo/*.* release/logo
 cp ng-sound.ogg release
 cp ng-sound-out.ogg release
 
+echo "window.portal='';" > "release/portal.js"
 zip -vr game.zip release/ -x "*.DS_Store"
+
+echo "window.portal='newgrounds';" > "release/portal.js"
+zip -vr game-newgrounds.zip release/ -x "*.DS_Store"
+
+echo "window.portal='arcadia';" > "release/portal.js"
+zip -vr game-arcadia.zip release/ -x "*.DS_Store"
+
+
 echo "=================================="
 echo "Max: 13,312b"
 wc -c  game.zip
