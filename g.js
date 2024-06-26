@@ -3,6 +3,31 @@ let q = document.querySelector.bind(document);
 const dadd = document.addEventListener;
 const rando = Math.random;
 const disto = (dx, dy) => Math.sqrt(dx * dx + dy * dy);
+const wife = "borte";
+let showIndicator = false;
+
+window.portal = "arcadia";
+console.log(window.portal);
+const allowRevival = window.portal !== "arcadia";
+const showBest = window.portal !== "arcadia";
+
+const unlockMedal = window.portal === "newgrounds" ? () => {
+  window?.getMedal(name);
+} : () => {};
+
+const submitScore = window.portal === "newgrounds" ? (score, board) => {
+  postScore(score, board);
+} : window.portal === "arcadia" ? (score, board) => {
+  if (board === "High score") {
+    getPayloadValidator().then(({ signedPayload }) => {
+      window.parent?.postMessage("submitScore", signedPayload({
+        score,
+      }, {wife}));
+    });
+  } else {
+    console.log("score for", board, score);
+  }
+} : () => {};
 
 
 function supports3(e) {
@@ -102,7 +127,9 @@ dadd('DOMContentLoaded', () => {
     cs.height = '600px';
     cs.border = '1px solid black';
     cs.backgroundColor = '#efd';
-    setTimeout(() => cs.opacity = 1, 1000);
+    setTimeout(() => {
+      cs.opacity = 1;
+    }, 1000);
     ctx.font = 'bold 40px gamefont';  //"bold 34px gamefont";
 
     function resize() {
@@ -221,6 +248,9 @@ dadd('DOMContentLoaded', () => {
         document.querySelector('#title').style.visibility = 'visible';
         setTimeout(() => {
           document.querySelector('#title').style.opacity = 0;
+          uds.opacity = 1;
+          mds.opacity = 1;
+          showIndicator = true;
         }, 4000);
         setTimeout(() => {
           document.querySelector('#title').style.display = 'none';
@@ -842,7 +872,7 @@ dadd('DOMContentLoaded', () => {
                     ...[1.99, , 238, , .08, .14, 2, 0, , -47, -84, , .15, , ,
                         .6, .15, , , .17]);  // Event
                 showText(
-                    '<b>Congratulations!</b> You beat the game.\n<span style=font-size:14pt>Feel free keep going, see how far you go. You no longer have revival option, <b>death is now permanent</b>. Each new yurt visited still increase the game\'s difficulty.</span>\n<b style=color:#FFD700>Good luck, Khan. May the spirits of the steppe guide your path.</b>');
+                    `<b>Congratulations!</b> You beat the game.\n<span style=font-size:14pt>Feel free keep going, see how far you go.${allowRevival ? "You no longer have revival option, <b>death is now permanent</b>." : ""} Each new yurt visited still increase the game\'s difficulty.</span>\n<b style=color:#FFD700>Good luck, Khan. May the spirits of the steppe guide your path.</b>`);
                 showShop();
                 unlockMedal('THE END');
               });
@@ -896,21 +926,25 @@ dadd('DOMContentLoaded', () => {
     const moneyDiv = document.body.appendChild(document.createElement('div'));
     const mds = moneyDiv.style;
     mds.position = 'absolute';
-    mds.top = canvas.offsetTop + 25;
-    mds.left = canvas.offsetLeft + 40;
+    mds.top = `${canvas.offsetTop + 25}px`;
+    mds.left = `${canvas.offsetLeft + 40}px`;
     mds.color = '#880';
     mds.fontSize = '20pt';
     mds.whiteSpace = 'pre-wrap';
     mds.pointerEvents = 'none';
+    mds.transition = "opacity 5s";
+    mds.opacity = 0;
 
     const upgradeDiv = document.body.appendChild(document.createElement('div'));
     const uds = upgradeDiv.style;
     uds.position = 'absolute';
-    uds.top = canvas.offsetTop + 170;
-    uds.left = canvas.offsetLeft + 40;
+    uds.top = `${canvas.offsetTop + 170}px`;
+    uds.left = `${canvas.offsetLeft + 40}px`;
     uds.pointerEvents = 'none';
     uds.display = 'flex';
     uds.flexDirection = 'column';
+    uds.transition = "opacity 5s";
+    uds.opacity = 0;
 
     const ROMAN = [
       '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'XI', 'X', 'XI',
@@ -922,7 +956,7 @@ dadd('DOMContentLoaded', () => {
     function showUpgrades(hideOne) {
       upgradeDiv.textContent = '';
 
-      if (revival) {
+      if (allowRevival && revival) {
         const revDiv = upgradeDiv.appendChild(document.createElement('div'));
         revDiv.textContent = repeatString('💀', revival);
       }
@@ -964,8 +998,7 @@ dadd('DOMContentLoaded', () => {
     let millitick = 0;
     let tick = 0;
     function showMeTheMoney(timer) {
-      if (timer && !screenPaused && !inCutScene && !inHut && !foundBorte &&
-          !hero.dead) {
+      if (timer && !screenPaused && !inCutScene && !inHut && !foundBorte && !hero.dead) {
         tick++;
         millitick = gTime;
 
@@ -993,11 +1026,13 @@ dadd('DOMContentLoaded', () => {
       const s = Math.max(
           0, timeLimit - tick);  // Math.max(0, timeLimit - Math.floor((now() -
                                  // startTime) / 1000));
-      moneyDiv.innerHTML = locked ?
-          '' :
-          `Level ${hutLevel}\n${str}\n🏵️ ${money}\n${s ? '⏳' : '⌛'} <span ${
-              s < 30 ? 'class=blink_me' : ''}>${Math.floor(s / 60)}:${
-              (100 + s % 60).toString().substring(1)}</span>`;
+      const divUpdate = locked ? '' :
+        `Level ${hutLevel}\n${str}\n🏵️ ${money}\n${s ? '⏳' : '⌛'} <span ${
+            s < 30 ? 'class=blink_me' : ''}>${Math.floor(s / 60)}:${
+            (100 + s % 60).toString().substring(1)}</span>`;
+      if (moneyDiv.innerHTML !== divUpdate) {
+        moneyDiv.innerHTML = divUpdate;
+      }
       if (health && s <= 0 && hutLevel) {
         health = 0;
         lifeCheck();
@@ -1011,8 +1046,8 @@ dadd('DOMContentLoaded', () => {
         document.body.appendChild(document.createElement('div'));
     const gods = gameOverDiv.style;
     gods.position = 'absolute';
-    gods.top = canvas.offsetTop + 10;
-    gods.left = canvas.offsetLeft + 150;
+    gods.top = `${canvas.offsetTop + 10}px`;
+    gods.left = `${canvas.offsetLeft + 150}px`;
     gods.fontSize = '16pt';
     gods.marginRight = '50px';
     gods.whiteSpace = 'pre-wrap';
@@ -1057,10 +1092,8 @@ dadd('DOMContentLoaded', () => {
       const pointsPerLevel = 10000;
       const pointsPerUpgrade = 1000;
       const upgradesCount = Object.values(upgrades).reduce((a, b) => a + b, 0);
-      const revivalBonus = Math.max(3 - revival, 0) * 10000;
-      const accuracy = !shotsTaken ?
-          1.5 :
-          Math.ceil((1 - missedShot / shotsTaken) * 1000) / 1000;
+      const revivalBonus = allowRevival ? Math.max(3 - revival, 0) * 10000 : 0;
+      const accuracy = !shotsTaken ? 1 : Math.ceil((1 - missedShot / shotsTaken) * 1000) / 1000;
       const accuracyBonus = parseFloat((1 + accuracy).toFixed(3));
       const bonusPoints = upgrades.bonus * pointsPerShopBonus;
 
@@ -1080,19 +1113,20 @@ dadd('DOMContentLoaded', () => {
         bestScore = finalScore;
         localStorage.setItem('bestScore', bestScore);
       }
-      postScore(finalScore, 'High score');
-      postScore(money * 100, 'Dying rich!');
-      postScore(hutLevel, 'Highest level');
+      submitScore(finalScore, 'High score');
+      submitScore(money * 100, 'Dying rich!');
+      submitScore(hutLevel, 'Highest level');
 
       gameOverBox.style.display = 'block';
       reviveButton.disabled = !canContinue();
+      reviveButton.style.display = allowRevival ? "" : "none";
       showText(
           '<div style=\'font-size: 24pt\'><b>GAME OVER, KHAN</b></div><div style=\'font-size: 18pt\'>' +
           '\n<b>LEVEL</b>: ' + hutLevel + ` (+ ${hutLevel * pointsPerLevel})` +
           '\n<b>UPGRADES</b>: ' + upgradesCount +
           ` (+ ${upgradesCount * pointsPerUpgrade})` +
           '\n<b>MONEY</b>: ' + money + ` (+ ${money * 10})` +
-          '\n<b>REVIVALS</b>: ' + revival + ` (+ ${revivalBonus})` +
+          (revivalBonus ? '\n<b>REVIVALS</b>: ' + revival + ` (+ ${revivalBonus})` : "") +
           (bonusPoints ? '\n<b>BONUS POINTS</b>: +' + bonusPoints : '') +
           (foundBorteBonus ? '\n<b>RESCUED BÖRTE</b>: ⌛ ' + timeRemaining +
                    ` (+ ${foundBorteBonus})` :
@@ -1104,7 +1138,7 @@ dadd('DOMContentLoaded', () => {
           ` (x ${accuracyBonus})` +
           '\n' +
           '\n<b>FINAL SCORE: ' + finalScore + '</b>' +
-          '\n<b>BEST</b>: ' + bestScore + '\n\n' +
+          (showBest ? '\n<b>BEST</b>: ' + bestScore + '\n\n' : "") +
           (canContinue() ?
                'Press <b>ESC</b> to revive. You will lose all your money and one upgrade.' :
                '') +
@@ -1410,7 +1444,7 @@ dadd('DOMContentLoaded', () => {
     }
 
     function canContinue() {
-      return !beatGame &&
+      return allowRevival && !beatGame &&
           Object.keys(upgrades).filter(k => upgrades[k]).length > 1;
       // return Object.keys(upgrades).filter(k => upgrades[k]).length;
     }
@@ -2451,16 +2485,12 @@ dadd('DOMContentLoaded', () => {
       return tree;
     });
 
-    function unlockMedal(name) {
-      window?.getMedal(name);
-    }
-
     function findBorte() {
       foundBorte = gTime;  // now();
       borte.x = hero.x;
       borte.y = hero.y;
       wildHordeMusic = furEliseMusic;
-      postScore(
+      submitScore(
           tick * 1000 + Math.max(0, Math.min(gTime - millitick, 999)),
           'Fastest rescue');
     }
@@ -2638,7 +2668,7 @@ dadd('DOMContentLoaded', () => {
         const chdx = ch.x - hero.x;
         const chdy = ch.y - hero.y;
         const chdist = disto(chdx, chdy);  // Math.sqrt(chdx*chdx + chdy*chdy);
-        if (chdist > 2000) {
+        if (chdist > 2000 && showIndicator) {
           if (!indic) {
             indic = [hero.x, hero.y];
           }

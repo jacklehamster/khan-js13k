@@ -10,9 +10,23 @@
     <body>
         <div id="loading-div" class="blink_me loading-div">Loading...</div>
         <div class="gameview">
-            <h1 id="title" class="game-title">The Terror of Mongolia</h1>
             <canvas class="start-hidden"></canvas>
+            <h1 id="title" class="game-title">The Terror of Mongolia</h1>
         </div>
+        <script>
+            window.portal = "arcadia";
+        </script>
+        <script>
+            let validator;
+            window.getPayloadValidator = async () => {
+                if (!validator) {
+                    validator = await import('https://unpkg.com/@dobuki/payload-validator@1.0.3');
+                }
+                return validator;
+            };
+        </script>
+
+        
         <script src="external/newgrounds/newgroundsio.min.js"></script>
         <script src="lib/ng.js"></script>
         <script src="ZzFXMicro.min.js"></script>

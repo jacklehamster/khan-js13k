@@ -12,6 +12,11 @@
             <h1 id="title" class="game-title">The Terror of Mongolia</h1>
             <canvas class="start-hidden"></canvas>
         </div>
+        <script type="module">
+            import { validatePayload, signedPayload } from 'https://unpkg.com/@dobuki/payload-validator@1.0.3';
+            window.validatePayload = validatePayload;
+            window.signedPayload = signedPayload;
+        </script>
         <script src="portal.js"></script>
         <script src=gg.js></script>    
     </body>
