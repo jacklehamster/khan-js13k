@@ -6,7 +6,6 @@ const disto = (dx, dy) => Math.sqrt(dx * dx + dy * dy);
 const wife = "borte";
 let showIndicator = false;
 
-window.portal = "arcadia";
 console.log(window.portal);
 const allowRevival = window.portal !== "arcadia";
 const showBest = window.portal !== "arcadia";
