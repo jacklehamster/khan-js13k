@@ -6,6 +6,13 @@ const disto = (dx, dy) => Math.sqrt(dx * dx + dy * dy);
 const wife = "borte";
 let showIndicator = false;
 
+const client = window.portal === "arcadia" ? new Colyseus.Client('ws://localhost:2567') : null;
+client?.join("terror-of-mongolia-room").then(room => {
+  console.log(room.sessionId, "joined", room.name);
+}).catch(e => {
+  console.log("JOIN ERROR", e);
+});
+
 console.log(window.portal);
 const allowRevival = window.portal !== "arcadia";
 const showBest = window.portal !== "arcadia";
